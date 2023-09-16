@@ -1,6 +1,7 @@
 from pathlib import Path
+from doit.launcher import get_study_root_dir
 
-TEMPLATE_PATH = Path("doit/sidd/src/codebook.html")
+TEMPLATE_PATH = get_study_root_dir() / "doit/sidd/src/codebook.html"
 
 
 def render_sidd(bundle_yaml_path: Path):

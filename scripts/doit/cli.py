@@ -9,3 +9,7 @@ def cli(bundle_yaml_path: str | Path) -> None:
     from render import render_sidd
     bundle_yaml_path = Path(bundle_yaml_path)
     render_sidd(bundle_yaml_path)
+
+
+if __name__ == '__main__':
+    cli()
