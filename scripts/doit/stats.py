@@ -148,6 +148,16 @@ def calc_variable_stats(col: bundle.ExportedColumn, df: pl.DataFrame) -> Variabl
                 pl.col(column_name).std().alias("sd"),
             ]).to_dicts()[0]
 
+            if not all(v for v in numeric_stats.values()):
+                return NumericStats(
+                    stype=stype,
+                    min=0,
+                    max=0,
+                    mean=0,
+                    sd=0,
+                    freqs=[],
+                )
+
             n_bins = 10
 
             bin_width = (numeric_stats["max"] - numeric_stats["min"]) / n_bins
