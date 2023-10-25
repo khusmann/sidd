@@ -2,4 +2,5 @@ dist
 node_modules
 .parcel-cache
 __pycache__
+build
 

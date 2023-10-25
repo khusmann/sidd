@@ -1,11 +1,19 @@
 {
-  "name": "my-page",
+  "name": "sidd",
   "version": "1.0.0",
-
+  "scripts": {
+    "build": "tsc && chmod a+x build/cli.js",
+    "sidd": "node build/cli.js",
+    "nodemon": "nodemon"
+  },
+  "bin": "build/cli.js",
   "devDependencies": {
+    "@types/node": "^20.8.8",
+    "nodemon": "^3.0.1",
     "parcel": "^2.9.3",
     "path-browserify": "^1.0.0",
-    "process": "^0.11.10"
+    "process": "^0.11.10",
+    "typescript": "^5.2.2"
   },
   "resolutions": {
     "htmlnano": "2.0.3"

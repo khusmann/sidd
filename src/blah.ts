@@ -3,8 +3,8 @@ const hello = () => {
 }
 
 console.log(hello())
-content.innerHTML = hello();
+//content.innerHTML = hello();
 
-document.write("hello");
+//document.write("hello");
 
 export { hello } ;
