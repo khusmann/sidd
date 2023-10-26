@@ -8,29 +8,23 @@ const floatRange = z.tuple([z.number(), z.number()]);
 
 const boolProb = z.number();
 
-const identifierStyle = z.enum([
-  "camel",
-  "kebab",
-  "snake",
-  "pascal",
-  "snake_caps",
-]);
+const identifierStyle = z.enum(["camel", "kebab", "snake", "snake_caps"]);
 
-const descriptionStyle = z.enum(["random", "lorem"]);
+const descriptionStyle = z.enum(["words", "lorem"]);
 
-const missingStyle = z.enum(["spss", "stata", "underscore", "random"]);
+const missingStyle = z.enum(["spss", "stata", "underscore"]);
 
 const identifierDefaults = z.object({
   n_words: intRange.default([1, 3]),
 });
 
 const missingValuesDefaults = z.object({
-  style: missingStyle.default("random"),
+  style: missingStyle.default("spss"),
   n_values: intRange.default([0, 4]),
 });
 
 const descriptionDefaults = z.object({
-  style: descriptionStyle.default("random"),
+  style: descriptionStyle.default("words"),
   n_words: intRange.default([5, 20]),
 });
 
@@ -96,7 +90,7 @@ const identifier = (cfg: GlobalConfig) =>
 const description = (cfg: GlobalConfig) =>
   z.object({
     style: descriptionStyle.default(cfg.descriptions.style),
-    n_words: intRange.default(cfg.descriptions.n_words).or(z.number().int()),
+    n_words: intRange.default(cfg.descriptions.n_words),
   });
 
 const missingValues = (cfg: GlobalConfig) =>
@@ -107,10 +101,9 @@ const missingValues = (cfg: GlobalConfig) =>
 
 const enumIntegerLevels = (cfg: GlobalConfig) =>
   z.object({
-    label_name: z
-      .record(z.string())
-      .or(identifier(cfg))
-      .default({ style: cfg.enum_levels.label_name_style }),
+    label_name: identifier(cfg).default({
+      style: cfg.enum_levels.label_name_style,
+    }),
     n_levels: intRange.default(cfg.fields.enum_n_levels),
     unlabelled: boolProb.default(cfg.enum_levels.integer_level_unlabelled),
     all_unlabelled: boolProb.default(cfg.enum_levels.integer_all_unlabelled),
@@ -118,10 +111,9 @@ const enumIntegerLevels = (cfg: GlobalConfig) =>
 
 const enumStringLevels = (cfg: GlobalConfig) =>
   z.object({
-    level_name: z
-      .record(z.string())
-      .or(identifier(cfg))
-      .default({ style: cfg.enum_levels.label_name_style }),
+    level_name: identifier(cfg).default({
+      style: cfg.enum_levels.label_name_style,
+    }),
     n_levels: intRange.default(cfg.fields.enum_n_levels),
   });
 
@@ -130,6 +122,7 @@ const fieldBase = (cfg: GlobalConfig) =>
     field_name: identifier(cfg).default({
       style: cfg.fields.field_name_style,
     }),
+    description: description(cfg).default({}),
     required: boolProb.default(cfg.fields.required),
     unique: boolProb.default(cfg.fields.unique),
     missing_values: missingValues(cfg).default({}),
@@ -150,14 +143,14 @@ const enumIntegerField = (cfg: GlobalConfig) =>
     .object({
       field_type: z.literal("enum_integer"),
       ordered: boolProb.default(cfg.fields.enum_ordered),
-      levels: z.array(z.string()).or(enumIntegerLevels(cfg)).default({}),
+      levels: enumIntegerLevels(cfg).default({}),
     })
     .merge(fieldBase(cfg));
 
 const numericField = (cfg: GlobalConfig) =>
   z
     .object({
-      field_type: z.literal("numeric"),
+      field_type: z.literal("number"),
       minimum: floatRange.default(cfg.fields.number_minimum),
       maximum: floatRange.default(cfg.fields.number_maximum),
     })
@@ -177,7 +170,7 @@ const enumStringField = (cfg: GlobalConfig) =>
     .object({
       field_type: z.literal("enum_string"),
       ordered: boolProb.default(cfg.fields.enum_ordered),
-      levels: z.array(z.string()).or(enumStringLevels(cfg)).default({}),
+      levels: enumStringLevels(cfg).default({}),
     })
     .merge(fieldBase(cfg));
 
@@ -198,7 +191,7 @@ const fieldChoice = (cfg: GlobalConfig) =>
       .default([
         { field_type: "integer" },
         { field_type: "enum_integer" },
-        { field_type: "numeric" },
+        { field_type: "number" },
         { field_type: "string" },
         { field_type: "enum_string" },
       ]),
@@ -283,6 +276,12 @@ const dataPackage = (cfg: GlobalConfig = globalConfig.parse({})) =>
     })
     .default({}); // Check that it works by default...
 
+export type IntRange = z.infer<typeof intRange>;
+export type FloatRange = z.infer<typeof floatRange>;
+export type BoolProb = z.infer<typeof boolProb>;
+export type IdentifierStyle = z.infer<typeof identifierStyle>;
+export type DescriptionStyle = z.infer<typeof descriptionStyle>;
+export type MissingStyle = z.infer<typeof missingStyle>;
 export type Identifier = ConfigType<typeof identifier>;
 export type Description = ConfigType<typeof description>;
 export type MissingValues = ConfigType<typeof missingValues>;

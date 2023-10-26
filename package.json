@@ -27,6 +27,7 @@
   "dependencies": {
     "@faker-js/faker": "^8.2.0",
     "parcel": "^2.10.1",
+    "ts-pattern": "^5.0.5",
     "zod": "^3.22.4"
   }
 }
