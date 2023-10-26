@@ -1,5 +1,7 @@
 import type { Faker } from "@faker-js/faker";
 
+import { faker as default_faker } from "@faker-js/faker";
+
 import { match, P } from "ts-pattern";
 
 import type * as cfg from "./config";
@@ -12,6 +14,11 @@ type RandState = {
   faker: Faker;
   seenIds: Set<string>;
 };
+
+const randState = (faker: Faker = default_faker): RandState => ({
+  faker,
+  seenIds: new Set(),
+});
 
 type RandGen<T> = (state: RandState) => T;
 
@@ -44,8 +51,9 @@ const maybe =
 const batch =
   (c: cfg.IntRange) =>
   <T>(gen: RandGen<T>) =>
-  (state: RandState) =>
-    new Array(randomInt(c)(state)).map(() => gen(state));
+  (state: RandState) => {
+    return [...new Array(randomInt(c)(state))].map(() => gen(state));
+  };
 
 const uniqueId = (gen: RandGen<string>) => (state: RandState) => {
   for (let i = 0; i < MAX_UNIQUE_ID_ATTEMPTS; i++) {
@@ -175,7 +183,7 @@ const enumIntegerLevels = (c: cfg.EnumIntegerLevels) => {
 
     const newLabelGen = allUnlabelled ? () => undefined : labelGen;
 
-    return new Array(nLevels).map((_, idx) => ({
+    return [...new Array(nLevels)].map((_, idx) => ({
       value: idx,
       label: newLabelGen(state),
     }));
@@ -186,7 +194,7 @@ const enumStringLevels = (c: cfg.EnumStringLevels) => {
   const levelGen = localUniqueId(identifier(c.level_name));
   return (state: RandState) => {
     const nLevels = randomInt(c.n_levels)(state);
-    return new Array(nLevels).map(() => levelGen(state));
+    return [...new Array(nLevels)].map(() => levelGen(state));
   };
 };
 
@@ -291,7 +299,7 @@ const field = (measureName: string) => (c: cfg.Field) =>
 
 const batchFieldGroup = (c: cfg.BatchFieldGroup) => (state: RandState) => {
   const nFields = randomInt(c.n_fields)(state);
-  return new Array(nFields).map(() => field("")(c.generator)(state));
+  return [...new Array(nFields)].map(() => field("")(c.generator)(state));
 };
 
 const measureFieldGroup = (c: cfg.MeasureFieldGroup) => (state: RandState) => {
@@ -309,10 +317,10 @@ const batchMeasureFieldGroup =
 
       const fieldGen = field(measureName)(c.generator);
 
-      return new Array(nFields).map(() => fieldGen(st));
+      return [...new Array(nFields)].map(() => fieldGen(st));
     };
 
-    return new Array(nMeasures).map(() => measureGen(state)).flat();
+    return [...new Array(nMeasures)].map(() => measureGen(state)).flat();
   };
 
 const fieldGroup = (c: cfg.FieldGroup) =>
@@ -334,8 +342,9 @@ const tableResource = (c: cfg.TableResource) => (state: RandState) => ({
   data: [],
 });
 
-const batchTableResource = (c: cfg.BatchTableResource) =>
-  batch(c.n_tables)(tableResource(c.generator));
+const batchTableResource = (c: cfg.BatchTableResource) => {
+  return batch(c.n_tables)(tableResource(c.generator));
+};
 
 const tableResourceList = (c: cfg.TableResourceList) =>
   match(c)
@@ -348,4 +357,4 @@ const dataPackage = (c: cfg.DataPackage) => (state: RandState) => ({
   resources: tableResourceList(c.resources)(state),
 });
 
-export { dataPackage };
+export { dataPackage, randState };

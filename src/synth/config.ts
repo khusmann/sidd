@@ -264,7 +264,7 @@ const tableResourceList = (cfg: GlobalConfig) =>
     z.union([batchTableResource(cfg), tableResource(cfg)]).array(),
   ]);
 
-const dataPackage = (cfg: GlobalConfig = globalConfig.parse({})) =>
+const dataPackage = (cfg: GlobalConfig) =>
   z
     .object({
       package_name: identifier(cfg).default({
@@ -306,4 +306,4 @@ export type BatchTableResource = ConfigType<typeof batchTableResource>;
 export type TableResourceList = ConfigType<typeof tableResourceList>;
 export type DataPackage = ConfigType<typeof dataPackage>;
 
-export { dataPackage };
+export { globalConfig, dataPackage };
