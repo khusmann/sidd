@@ -1,6 +1,6 @@
 import type { Faker } from "@faker-js/faker";
 
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import type * as cfg from "./config";
 
@@ -22,6 +22,11 @@ const map =
   (gen: RandGen<T>): RandGen<P> =>
   (state: RandState) =>
     f(gen(state));
+
+const seq =
+  <T>(gens: Array<RandGen<T>>): RandGen<T[]> =>
+  (state: RandState) =>
+    gens.map((g) => g(state));
 
 const MAX_UNIQUE_ID_ATTEMPTS = 1000;
 
@@ -185,20 +190,27 @@ const enumStringLevels = (c: cfg.EnumStringLevels) => {
   };
 };
 
-const fieldBase = (c: cfg.FieldBase) => (state: RandState) => ({
-  name: uniqueId(identifier(c.field_name))(state),
-  description: maybe(1 - c.undefined_props)(description(c.description))(state),
-  required: maybe(1 - c.undefined_props)(boolean(c.required))(state),
-  unique: maybe(1 - c.undefined_props)(boolean(c.unique))(state),
-  missingValues: maybe(1 - c.undefined_props)(missingValues(c.missing_values))(
-    state
-  ),
-});
+const fieldName = (measureName: string, c: cfg.Identifier) =>
+  uniqueId(map((s) => [measureName, s].join("_"))(identifier(c)));
+
+const fieldBase =
+  (measureName: string) => (c: cfg.FieldBase) => (state: RandState) => ({
+    name: fieldName(measureName, c.field_name)(state),
+    description: maybe(1 - c.undefined_props)(description(c.description))(
+      state
+    ),
+    required: maybe(1 - c.undefined_props)(boolean(c.required))(state),
+    unique: maybe(1 - c.undefined_props)(boolean(c.unique))(state),
+    missingValues: maybe(1 - c.undefined_props)(
+      missingValues(c.missing_values)
+    )(state),
+  });
 
 const integerField =
+  (measureName: string) =>
   (c: cfg.IntegerField) =>
   (state: RandState): m.Field => ({
-    ...fieldBase(c)(state),
+    ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "integer",
       minimum: maybe(1 - c.undefined_props)(randomInt(c.minimum))(state),
@@ -207,9 +219,10 @@ const integerField =
   });
 
 const enumIntegerField =
+  (measureName: string) =>
   (c: cfg.EnumIntegerField) =>
   (state: RandState): m.Field => ({
-    ...fieldBase(c)(state),
+    ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "enum_integer",
       levels: enumIntegerLevels(c.levels)(state),
@@ -218,9 +231,10 @@ const enumIntegerField =
   });
 
 const stringField =
+  (measureName: string) =>
   (c: cfg.StringField) =>
   (state: RandState): m.Field => ({
-    ...fieldBase(c)(state),
+    ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "string",
       minLength: maybe(1 - c.undefined_props)(randomInt(c.min_length))(state),
@@ -229,9 +243,10 @@ const stringField =
   });
 
 const enumStringField =
+  (measureName: string) =>
   (c: cfg.EnumStringField) =>
   (state: RandState): m.Field => ({
-    ...fieldBase(c)(state),
+    ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "enum_string",
       levels: enumStringLevels(c.levels)(state),
@@ -240,9 +255,10 @@ const enumStringField =
   });
 
 const numericField =
+  (measureName: string) =>
   (c: cfg.NumericField) =>
   (state: RandState): m.Field => ({
-    ...fieldBase(c)(state),
+    ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "number",
       minimum: maybe(1 - c.undefined_props)(randomFloat(c.minimum))(state),
@@ -250,30 +266,86 @@ const numericField =
     },
   });
 
-const primitiveField = (c: cfg.PrimitiveField) => (state: RandState) =>
+const primitiveField = (measureName: string) => (c: cfg.PrimitiveField) =>
   match(c)
-    .with({ field_type: "integer" }, (c) => integerField(c))
-    .with({ field_type: "enum_integer" }, (c) => enumIntegerField(c))
-    .with({ field_type: "string" }, (c) => stringField(c))
-    .with({ field_type: "enum_string" }, (c) => enumStringField(c))
-    .with({ field_type: "number" }, (c) => numericField(c))
-    .exhaustive()(state);
+    .with({ field_type: "integer" }, (c) => integerField(measureName)(c))
+    .with({ field_type: "enum_integer" }, (c) =>
+      enumIntegerField(measureName)(c)
+    )
+    .with({ field_type: "string" }, (c) => stringField(measureName)(c))
+    .with({ field_type: "enum_string" }, (c) => enumStringField(measureName)(c))
+    .with({ field_type: "number" }, (c) => numericField(measureName)(c))
+    .exhaustive();
 
-const fieldChoice = (c: cfg.FieldChoice) => (state: RandState) => {
-  const fieldGens = c.choices.map((c) => primitiveField(c));
-  const choice = state.faker.helpers.arrayElement(fieldGens);
-  return choice(state);
+const fieldChoice =
+  (measureName: string) => (c: cfg.FieldChoice) => (state: RandState) => {
+    const fieldGens = c.choices.map((c) => primitiveField(measureName)(c));
+    const choice = state.faker.helpers.arrayElement(fieldGens);
+    return choice(state);
+  };
+
+const field = (measureName: string) => (c: cfg.Field) =>
+  match(c)
+    .with({ field_type: "choice" }, (c) => fieldChoice(measureName)(c))
+    .otherwise((c) => primitiveField(measureName)(c));
+
+const batchFieldGroup = (c: cfg.BatchFieldGroup) => (state: RandState) => {
+  const nFields = randomInt(c.n_fields)(state);
+  return new Array(nFields).map(() => field("")(c.generator)(state));
 };
 
-const field = (c: cfg.Field) => (state: RandState) =>
+const measureFieldGroup = (c: cfg.MeasureFieldGroup) => (state: RandState) => {
+  const measureName = uniqueId(identifier(c.measure_name))(state);
+  return c.fields.map(field(measureName)).map((f) => f(state));
+};
+
+const batchMeasureFieldGroup =
+  (c: cfg.BatchMeasureFieldGroup) => (state: RandState) => {
+    const nMeasures = randomInt(c.n_measures)(state);
+
+    const measureGen = (st: RandState) => {
+      const measureName = uniqueId(identifier(c.measure_name))(st);
+      const nFields = randomInt(c.n_fields)(st);
+
+      const fieldGen = field(measureName)(c.generator);
+
+      return new Array(nFields).map(() => fieldGen(st));
+    };
+
+    return new Array(nMeasures).map(() => measureGen(state)).flat();
+  };
+
+const fieldGroup = (c: cfg.FieldGroup) =>
   match(c)
-    .with({ field_type: "choice" }, (c) => fieldChoice(c))
-    .with(
-      { field_type: "integer" },
-      { field_type: "enum_integer" },
-      { field_type: "string" },
-      { field_type: "enum_string" },
-      { field_type: "number" },
-      (c) => primitiveField(c)
-    )
-    .exhaustive()(state);
+    .with({ group_type: "batch" }, (c) => batchFieldGroup(c))
+    .with({ group_type: "measure" }, (c) => measureFieldGroup(c))
+    .with({ group_type: "batch_measure" }, (c) => batchMeasureFieldGroup(c))
+    .exhaustive();
+
+const fieldList = (c: cfg.FieldList) =>
+  match(c)
+    .with(P.array(P._), (c: cfg.Field[]) => seq(c.map(field(""))))
+    .otherwise((c) => fieldGroup(c));
+
+const tableResource = (c: cfg.TableResource) => (state: RandState) => ({
+  name: uniqueId(identifier(c.table_name))(state),
+  description: maybe(1 - c.undefined_props)(description(c.description))(state),
+  fields: fieldList(c.fields)(state),
+  data: [],
+});
+
+const batchTableResource = (c: cfg.BatchTableResource) =>
+  batch(c.n_tables)(tableResource(c.generator));
+
+const tableResourceList = (c: cfg.TableResourceList) =>
+  match(c)
+    .with(P.array(P._), (c: cfg.TableResource[]) => seq(c.map(tableResource)))
+    .otherwise((c) => batchTableResource(c));
+
+const dataPackage = (c: cfg.DataPackage) => (state: RandState) => ({
+  name: uniqueId(identifier(c.package_name))(state),
+  description: maybe(1 - c.undefined_props)(description(c.description))(state),
+  resources: tableResourceList(c.resources)(state),
+});
+
+export { dataPackage };
