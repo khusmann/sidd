@@ -17,102 +17,82 @@ const identifierStyle = z.enum([
   "snake_caps",
 ]);
 
-type IdentifierStyle = z.infer<typeof identifierStyle>;
-
 const sentenceStyle = z.enum(["random", "lorem"]);
 
-const identifierDefaults = z
-  .object({
-    n_words: intRange.default([1, 3]),
-  })
-  .default({});
+const identifierDefaults = z.object({
+  n_words: intRange.default([1, 3]),
+});
 
-const identifier = (config: GlobalConfig, defaultStyle: IdentifierStyle) =>
-  z
-    .object({
-      style: identifierStyle.default(defaultStyle),
-      n_words: intRange.default(config.identifiers.n_words),
-    })
-    .default({});
+const identifier = (config: GlobalConfig) =>
+  z.object({
+    style: identifierStyle,
+    n_words: intRange.default(config.identifiers.n_words),
+  });
 
-const sentenceDefaults = z
-  .object({
-    style: sentenceStyle.default("random"),
-    n_words: intRange.default([5, 20]),
-  })
-  .default({});
+const sentenceDefaults = z.object({
+  style: sentenceStyle.default("random"),
+  n_words: intRange.default([5, 20]),
+});
 
 const sentence = (config: GlobalConfig) =>
-  z
-    .object({
-      style: sentenceStyle.default(config.sentences.style),
-      n_words: intRange.default(config.sentences.n_words).or(z.number().int()),
-    })
-    .default({});
+  z.object({
+    style: sentenceStyle.default(config.sentences.style),
+    n_words: intRange.default(config.sentences.n_words).or(z.number().int()),
+  });
 
-const enumIntegerLevelsDefaults = z
-  .object({
-    label_name_style: identifierStyle.default("snake_caps"),
-    n_levels: intRange.default([2, 10]),
-    unlabelled: boolProb.default(0.2),
-    all_unlabelled: boolProb.default(0.2),
-  })
-  .default({});
+const enumIntegerLevelsDefaults = z.object({
+  label_name_style: identifierStyle.default("snake_caps"),
+  n_levels: intRange.default([2, 10]),
+  unlabelled: boolProb.default(0.2),
+  all_unlabelled: boolProb.default(0.2),
+});
 
 const enumIntegerLevels = (config: GlobalConfig) =>
-  z
-    .object({
-      label_name: z
-        .record(z.string())
-        .or(identifier(config, config.enum_integer_levels.label_name_style)),
-      n_levels: intRange.default(config.enum_integer_levels.n_levels),
-      unlabelled: boolProb.default(config.enum_integer_levels.unlabelled),
-      all_unlabelled: boolProb.default(
-        config.enum_integer_levels.all_unlabelled
-      ),
-    })
-    .default({});
+  z.object({
+    label_name: z
+      .record(z.string())
+      .or(identifier(config))
+      .default({ style: config.enum_integer_levels.label_name_style }),
+    n_levels: intRange.default(config.enum_integer_levels.n_levels),
+    unlabelled: boolProb.default(config.enum_integer_levels.unlabelled),
+    all_unlabelled: boolProb.default(config.enum_integer_levels.all_unlabelled),
+  });
 
-const enumStringLevelsDefaults = z
-  .object({
-    level_name_style: identifierStyle.default("snake_caps"),
-    n_levels: intRange.default([2, 10]),
-  })
-  .default({});
+const enumStringLevelsDefaults = z.object({
+  level_name_style: identifierStyle.default("snake_caps"),
+  n_levels: intRange.default([2, 10]),
+});
 
 const enumStringLevels = (config: GlobalConfig) =>
-  z
-    .object({
-      level_name: z
-        .record(z.string())
-        .or(identifier(config, config.enum_string_levels.level_name_style)),
-      n_levels: intRange.default(config.enum_string_levels.n_levels),
-    })
-    .default({});
+  z.object({
+    level_name: z
+      .record(z.string())
+      .or(identifier(config))
+      .default({ style: config.enum_string_levels.level_name_style }),
+    n_levels: intRange.default(config.enum_string_levels.n_levels),
+  });
 
-const fieldBaseDefaults = z
-  .object({
-    field_name_style: identifierStyle.default("camel"),
-    required: boolProb.default(0.5),
-    unique: boolProb.default(0.5),
-    n_missing_values: intRange.default([0, 4]),
-  })
-  .default({});
+const fieldBaseDefaults = z.object({
+  field_name_style: identifierStyle.default("camel"),
+  required: boolProb.default(0.5),
+  unique: boolProb.default(0.5),
+  n_missing_values: intRange.default([0, 4]),
+});
 
 const fieldBase = (config: GlobalConfig) =>
   z.object({
-    field_name: identifier(config, config.fields.field_name_style),
+    field_name: identifier(config).default({
+      style: config.fields.field_name_style,
+    }),
     required: boolProb.default(config.fields.required),
     unique: boolProb.default(config.fields.unique),
     n_missing_values: intRange.default(config.fields.n_missing_values),
   });
 
-const integerFieldDefaults = z
-  .object({
-    minimum: intRange.default([0, 100]),
-    maximum: intRange.default([0, 100]),
-  })
-  .default({});
+const integerFieldDefaults = z.object({
+  minimum: intRange.default([0, 100]),
+  maximum: intRange.default([0, 100]),
+});
 
 const integerField = (config: GlobalConfig) =>
   z
@@ -123,27 +103,23 @@ const integerField = (config: GlobalConfig) =>
     })
     .merge(fieldBase(config));
 
-const enumIntegerFieldDefaults = z
-  .object({
-    ordered: boolProb.default(0.5),
-  })
-  .default({});
+const enumIntegerFieldDefaults = z.object({
+  ordered: boolProb.default(0.5),
+});
 
 const enumIntegerField = (config: GlobalConfig) =>
   z
     .object({
       field_type: z.literal("enum_integer"),
       ordered: boolProb.default(config.enum_integer_fields.ordered),
-      levels: z.array(z.string()).or(enumIntegerLevels(config)),
+      levels: z.array(z.string()).or(enumIntegerLevels(config)).default({}),
     })
     .merge(fieldBase(config));
 
-const numericFieldDefaults = z
-  .object({
-    minimum: floatRange.default([0, 100]),
-    maximum: floatRange.default([0, 100]),
-  })
-  .default({});
+const numericFieldDefaults = z.object({
+  minimum: floatRange.default([0, 100]),
+  maximum: floatRange.default([0, 100]),
+});
 
 const numericField = (config: GlobalConfig) =>
   z
@@ -154,12 +130,10 @@ const numericField = (config: GlobalConfig) =>
     })
     .merge(fieldBase(config));
 
-const stringFieldDefaults = z
-  .object({
-    min_length: intRange.default([0, 100]),
-    max_length: intRange.default([0, 100]),
-  })
-  .default({});
+const stringFieldDefaults = z.object({
+  min_length: intRange.default([0, 100]),
+  max_length: intRange.default([0, 100]),
+});
 
 const stringField = (config: GlobalConfig) =>
   z
@@ -170,18 +144,16 @@ const stringField = (config: GlobalConfig) =>
     })
     .merge(fieldBase(config));
 
-const enumStringFieldDefaults = z
-  .object({
-    ordered: boolProb.default(0.5),
-  })
-  .default({});
+const enumStringFieldDefaults = z.object({
+  ordered: boolProb.default(0.5),
+});
 
 const enumStringField = (config: GlobalConfig) =>
   z
     .object({
       field_type: z.literal("enum_string"),
       ordered: boolProb.default(config.enum_string_fields.ordered),
-      levels: z.array(z.string()).or(enumStringLevels(config)),
+      levels: z.array(z.string()).or(enumStringLevels(config)).default({}),
     })
     .merge(fieldBase(config));
 
@@ -211,21 +183,18 @@ const fieldChoice = (config: GlobalConfig) =>
 const field = (config: GlobalConfig) =>
   z.union([primitiveField(config), fieldChoice(config)]);
 
-const batchMeasureFieldGroupDefaults = z
-  .object({
-    measure_name_style: identifierStyle.default("camel"),
-    n_fields: intRange.default([2, 20]),
-    n_measures: intRange.default([2, 20]),
-  })
-  .default({});
+const batchMeasureFieldGroupDefaults = z.object({
+  measure_name_style: identifierStyle.default("camel"),
+  n_fields: intRange.default([2, 20]),
+  n_measures: intRange.default([2, 20]),
+});
 
 const batchMeasureFieldGroup = (config: GlobalConfig) =>
   z.object({
     group_type: z.literal("batch_measure"),
-    measure_name: identifier(
-      config,
-      config.batch_measure_field_groups.measure_name_style
-    ),
+    measure_name: identifier(config).default({
+      style: config.batch_measure_field_groups.measure_name_style,
+    }),
     generator: field(config).default({ field_type: "choice" }),
     n_fields: intRange.default(config.batch_measure_field_groups.n_fields),
     n_measures: intRange.default(config.batch_measure_field_groups.n_measures),
@@ -234,7 +203,7 @@ const batchMeasureFieldGroup = (config: GlobalConfig) =>
 const measureFieldGroup = (config: GlobalConfig) =>
   z.object({
     group_type: z.literal("measure"),
-    measure_name: identifier(config, "camel"),
+    measure_name: identifier(config).default({ style: "camel" }),
     fields: field(config).array(),
   });
 
@@ -256,79 +225,79 @@ const fieldList = (config: GlobalConfig) =>
   z.union([
     batchMeasureFieldGroup(config),
     batchFieldGroup(config),
-    field(config),
     fieldGroup(config),
+    field(config).array(),
   ]);
 
-const tableSchemaDefaults = z
+const tableResourceDefaults = z
   .object({
     table_name_style: identifierStyle.default("kebab"),
     n_missing_values: intRange.default([0, 4]),
   })
   .default({});
 
-const tableSchema = (config: GlobalConfig) =>
+const tableResource = (config: GlobalConfig) =>
   z.object({
-    table_name: identifier(config, config.table_resources.table_name_style),
+    table_name: identifier(config).default({
+      style: config.table_resources.table_name_style,
+    }),
     description: sentence(config).default({}),
     fields: fieldList(config).default({ group_type: "batch_measure" }),
     n_missing_values: intRange.default(config.table_resources.n_missing_values),
   });
 
-const batchTableResourceDefaults = z
-  .object({
-    n_tables: intRange.default([1, 10]),
-  })
-  .default({});
+const batchTableResourceDefaults = z.object({
+  n_tables: intRange.default([1, 10]),
+});
 
 const batchTableResource = (config: GlobalConfig) =>
   z.object({
     group_type: z.literal("batch"),
-    generator: tableSchema(config).default({}),
+    generator: tableResource(config).default({}),
     n_tables: intRange.default(config.batch_table_resources.n_tables),
   });
 
 const tableResourceList = (config: GlobalConfig) =>
   z.union([
     batchTableResource(config),
-    z.union([batchTableResource(config), tableSchema(config)]).array(),
+    z.union([batchTableResource(config), tableResource(config)]).array(),
   ]);
 
-const dataPackageDefaults = z
-  .object({
-    package_name_style: identifierStyle.default("kebab"),
-  })
-  .default({});
+const dataPackageDefaults = z.object({
+  package_name_style: identifierStyle.default("kebab"),
+});
 
 const globalConfig = z
   .object({
-    identifiers: identifierDefaults,
-    sentences: sentenceDefaults,
-    enum_integer_levels: enumIntegerLevelsDefaults,
-    enum_string_levels: enumStringLevelsDefaults,
-    fields: fieldBaseDefaults,
-    integer_fields: integerFieldDefaults,
-    enum_integer_fields: enumIntegerFieldDefaults,
-    numeric_fields: numericFieldDefaults,
-    string_fields: stringFieldDefaults,
-    enum_string_fields: enumStringFieldDefaults,
-    batch_measure_field_groups: batchMeasureFieldGroupDefaults,
-    table_resources: tableSchemaDefaults,
-    batch_table_resources: batchTableResourceDefaults,
-    data_package: dataPackageDefaults,
+    identifiers: identifierDefaults.default({}),
+    sentences: sentenceDefaults.default({}),
+    enum_integer_levels: enumIntegerLevelsDefaults.default({}),
+    enum_string_levels: enumStringLevelsDefaults.default({}),
+    fields: fieldBaseDefaults.default({}),
+    integer_fields: integerFieldDefaults.default({}),
+    enum_integer_fields: enumIntegerFieldDefaults.default({}),
+    numeric_fields: numericFieldDefaults.default({}),
+    string_fields: stringFieldDefaults.default({}),
+    enum_string_fields: enumStringFieldDefaults.default({}),
+    batch_measure_field_groups: batchMeasureFieldGroupDefaults.default({}),
+    table_resources: tableResourceDefaults.default({}),
+    batch_table_resources: batchTableResourceDefaults.default({}),
+    data_package: dataPackageDefaults.default({}),
   })
-  .default({});
+  .default({}); // Check that it works by default...
 
 type GlobalConfig = z.infer<typeof globalConfig>;
 
 const dataPackage = (config: GlobalConfig = globalConfig.parse({})) =>
   z
     .object({
-      package_name: identifier(config, config.data_package.package_name_style),
-      description: sentence(config),
+      package_name: identifier(config).default({
+        style: config.data_package.package_name_style,
+      }),
+      description: sentence(config).default({}),
       resources: tableResourceList(config).default({ group_type: "batch" }),
     })
-    .default({});
+    .default({}); // Check that it works by default...
 
 /** #######################  BREAK ########################## */
 
