@@ -2,4 +2,4 @@
 
 import * as cfg from "./synth_config";
 
-console.log(JSON.stringify(cfg.dataPackage.parse({}), null, 2));
+console.log(JSON.stringify(cfg.dataPackage().parse({}), null, 2));
