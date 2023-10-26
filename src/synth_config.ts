@@ -229,12 +229,10 @@ const fieldList = (config: GlobalConfig) =>
     field(config).array(),
   ]);
 
-const tableResourceDefaults = z
-  .object({
-    table_name_style: identifierStyle.default("kebab"),
-    n_missing_values: intRange.default([0, 4]),
-  })
-  .default({});
+const tableResourceDefaults = z.object({
+  table_name_style: identifierStyle.default("kebab"),
+  n_missing_values: intRange.default([0, 4]),
+});
 
 const tableResource = (config: GlobalConfig) =>
   z.object({
