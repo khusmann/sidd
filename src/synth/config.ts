@@ -82,6 +82,8 @@ const globalConfig = z.object({
 
 type GlobalConfig = z.infer<typeof globalConfig>;
 
+type ConfigType<T extends (...args: any) => any> = z.infer<ReturnType<T>>;
+
 const identifier = (cfg: GlobalConfig) =>
   z.object({
     style: identifierStyle,
@@ -128,6 +130,7 @@ const fieldBase = (cfg: GlobalConfig) =>
     required: boolProb.default(cfg.fields.required),
     unique: boolProb.default(cfg.fields.unique),
     missing_values: missingValues(cfg).default({}),
+    undefined_properties: boolProb.default(0.1),
   });
 
 const integerField = (cfg: GlobalConfig) =>
@@ -275,10 +278,28 @@ const dataPackage = (cfg: GlobalConfig = globalConfig.parse({})) =>
     })
     .default({}); // Check that it works by default...
 
-/** #######################  BREAK ########################## */
-
-// Global settings:
-// undefined_prob
-// missing_style
+export type Identifier = ConfigType<typeof identifier>;
+export type Description = ConfigType<typeof description>;
+export type MissingValues = ConfigType<typeof missingValues>;
+export type EnumIntegerLevels = ConfigType<typeof enumIntegerLevels>;
+export type EnumStringLevels = ConfigType<typeof enumStringLevels>;
+export type FieldBase = ConfigType<typeof fieldBase>;
+export type IntegerField = ConfigType<typeof integerField>;
+export type EnumIntegerField = ConfigType<typeof enumIntegerField>;
+export type NumericField = ConfigType<typeof numericField>;
+export type StringField = ConfigType<typeof stringField>;
+export type EnumStringField = ConfigType<typeof enumStringField>;
+export type PrimitiveField = ConfigType<typeof primitiveField>;
+export type FieldChoice = ConfigType<typeof fieldChoice>;
+export type Field = ConfigType<typeof field>;
+export type BatchMeasureFieldGroup = ConfigType<typeof batchMeasureFieldGroup>;
+export type MeasureFieldGroup = ConfigType<typeof measureFieldGroup>;
+export type BatchFieldGroup = ConfigType<typeof batchFieldGroup>;
+export type FieldGroup = ConfigType<typeof fieldGroup>;
+export type FieldList = ConfigType<typeof fieldList>;
+export type TableResource = ConfigType<typeof tableResource>;
+export type BatchTableResource = ConfigType<typeof batchTableResource>;
+export type TableResourceList = ConfigType<typeof tableResourceList>;
+export type DataPackage = ConfigType<typeof dataPackage>;
 
 export { dataPackage };
