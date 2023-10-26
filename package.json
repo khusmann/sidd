@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc && chmod a+x build/cli.js",
     "sidd": "node build/cli.js",
-    "nodemon": "nodemon"
+    "start": "nodemon"
   },
   "bin": "build/cli.js",
   "devDependencies": {
