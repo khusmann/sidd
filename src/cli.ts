@@ -1,15 +1,7 @@
 #!/usr/bin/env node
 
-import * as cfg from "./synth/config";
+import { generateDataPackage } from "./synth/generator";
 
-import * as gen from "./synth/generator";
-
-const globalConfig = cfg.globalConfig.parse({});
-
-const packageConfig = cfg.dataPackage(globalConfig).parse({});
-
-const state = gen.randState();
-
-const synthDataPackage = gen.dataPackage(packageConfig)(state);
+const synthDataPackage = generateDataPackage();
 
 console.log(JSON.stringify(synthDataPackage, null, 2));

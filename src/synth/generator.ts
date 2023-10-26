@@ -4,7 +4,7 @@ import { faker as default_faker } from "@faker-js/faker";
 
 import { match, P } from "ts-pattern";
 
-import type * as cfg from "./config";
+import * as cfg from "./config";
 
 import type * as m from "./model";
 
@@ -357,4 +357,18 @@ const dataPackage = (c: cfg.DataPackage) => (state: RandState) => ({
   resources: tableResourceList(c.resources)(state),
 });
 
-export { dataPackage, randState };
+const generateDataPackage = (
+  dataPackageConfig?: any,
+  defaultsConfig?: any,
+  state: RandState = randState()
+) => {
+  const dc = defaultsConfig ?? {};
+  const dpc = dataPackageConfig ?? {};
+
+  const dcParsed = cfg.defaultsConfig.parse(dc);
+  const dpcParsed = cfg.dataPackage(dcParsed).parse(dpc);
+
+  return dataPackage(dpcParsed)(state);
+};
+
+export { randState, generateDataPackage };
