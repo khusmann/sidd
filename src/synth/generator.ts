@@ -135,11 +135,13 @@ const underscoreMissingValue = () => (state: RandState) =>
 
 const missingValues = (c: cfg.MissingValues) =>
   batch(c.n_values)(
-    match(c.style)
-      .with("spss", () => spssMissingValue())
-      .with("stata", () => stataMissingValue())
-      .with("underscore", () => underscoreMissingValue())
-      .exhaustive()
+    localUniqueId(
+      match(c.style)
+        .with("spss", () => spssMissingValue())
+        .with("stata", () => stataMissingValue())
+        .with("underscore", () => underscoreMissingValue())
+        .exhaustive()
+    )
   );
 
 const lorem =
@@ -159,31 +161,28 @@ const identifier = (c: cfg.Identifier) =>
 const description = (c: cfg.Description) =>
   map(sentenceJoiner)(wordGenFromDescriptionStyle(c.style)(c.n_words));
 
-const enumIntegerLevel =
-  (c: cfg.EnumIntegerLevels) =>
-  (value: number | string, allUnlabelled: boolean) =>
-  (state: RandState): m.EnumIntegerLevel => ({
-    value,
-    label: allUnlabelled
-      ? undefined
-      : maybe(1 - c.unlabelled)(identifier(c.label_name))(state),
-  });
+const enumIntegerLevels = (c: cfg.EnumIntegerLevels) => {
+  const labelGen = localUniqueId(identifier(c.label_name));
 
-const enumIntegerLevels =
-  (c: cfg.EnumIntegerLevels) =>
-  (state: RandState): m.EnumIntegerLevel[] => {
-    const levelGen = enumIntegerLevel(c);
-    const nLevels = randomInt(c.n_levels)(state);
+  return (state: RandState) => {
     const allUnlabelled = boolean(c.all_unlabelled)(state);
-    return new Array(nLevels).map((_, idx) =>
-      levelGen(idx, allUnlabelled)(state)
-    );
-  };
+    const nLevels = randomInt(c.n_levels)(state);
 
-const enumStringLevels = (c: cfg.EnumStringLevels) => (state: RandState) => {
-  const levelGen = identifier(c.level_name);
-  const nLevels = randomInt(c.n_levels)(state);
-  return new Array(nLevels).map(() => levelGen(state));
+    const newLabelGen = allUnlabelled ? () => undefined : labelGen;
+
+    return new Array(nLevels).map((_, idx) => ({
+      value: idx,
+      label: newLabelGen(state),
+    }));
+  };
+};
+
+const enumStringLevels = (c: cfg.EnumStringLevels) => {
+  const levelGen = localUniqueId(identifier(c.level_name));
+  return (state: RandState) => {
+    const nLevels = randomInt(c.n_levels)(state);
+    return new Array(nLevels).map(() => levelGen(state));
+  };
 };
 
 const fieldBase = (c: cfg.FieldBase) => (state: RandState) => ({
