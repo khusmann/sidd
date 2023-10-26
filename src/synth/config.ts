@@ -52,6 +52,7 @@ const fieldDefaults = z.object({
   number_maximum: floatRange.default([0, 100]),
   string_min_length: intRange.default([0, 100]),
   string_max_length: intRange.default([0, 100]),
+  undefined_props: boolProb.default(0.1),
 });
 
 const measureDefaults = z.object({
@@ -62,11 +63,13 @@ const measureDefaults = z.object({
 const tableResourceDefaults = z.object({
   table_name_style: identifierStyle.default("kebab"),
   n_measures: intRange.default([2, 20]),
+  undefined_props: boolProb.default(0.1),
 });
 
 const dataPackageDefaults = z.object({
   package_name_style: identifierStyle.default("kebab"),
   n_tables: intRange.default([1, 10]),
+  undefined_props: boolProb.default(0.1),
 });
 
 const globalConfig = z.object({
@@ -130,7 +133,7 @@ const fieldBase = (cfg: GlobalConfig) =>
     required: boolProb.default(cfg.fields.required),
     unique: boolProb.default(cfg.fields.unique),
     missing_values: missingValues(cfg).default({}),
-    undefined_properties: boolProb.default(0.1),
+    undefined_props: boolProb.default(cfg.fields.undefined_props),
   });
 
 const integerField = (cfg: GlobalConfig) =>
@@ -252,6 +255,7 @@ const tableResource = (cfg: GlobalConfig) =>
     description: description(cfg).default({}),
     fields: fieldList(cfg).default({ group_type: "batch_measure" }),
     missing_values: missingValues(cfg).default({}),
+    undefined_props: boolProb.default(cfg.table_resources.undefined_props),
   });
 
 const batchTableResource = (cfg: GlobalConfig) =>
@@ -275,6 +279,7 @@ const dataPackage = (cfg: GlobalConfig = globalConfig.parse({})) =>
       }),
       description: description(cfg).default({}),
       resources: tableResourceList(cfg).default({ group_type: "batch" }),
+      undefined_props: boolProb.default(cfg.data_package.undefined_props),
     })
     .default({}); // Check that it works by default...
 
