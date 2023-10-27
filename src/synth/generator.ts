@@ -119,6 +119,7 @@ const words =
       .words({
         count: { min: range[0], max: range[1] },
       })
+      .replace("-", "")
       .split(" ");
 
 const randomInt =
@@ -221,8 +222,7 @@ const integerField =
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "integer",
-      minimum: maybe(1 - c.undefined_props)(randomInt(c.minimum))(state),
-      maximum: maybe(1 - c.undefined_props)(randomInt(c.maximum))(state),
+      ...interval(c.minimum, c.maximum, c.undefined_props)(state),
     },
   });
 
@@ -238,6 +238,18 @@ const enumIntegerField =
     },
   });
 
+const interval =
+  (r1: cfg.IntRange, r2: cfg.IntRange, undefinedProps: cfg.BoolProb) =>
+  (state: RandState) => {
+    const x1 = maybe(1 - undefinedProps)(randomInt(r1))(state);
+    const x2 = maybe(1 - undefinedProps)(randomInt(r2))(state);
+    if (x1 !== undefined && x2 !== undefined) {
+      return { minimum: Math.min(x1, x2), maximum: Math.max(x1, x2) };
+    } else {
+      return { minimum: x1, maximum: x2 };
+    }
+  };
+
 const stringField =
   (measureName: string) =>
   (c: cfg.StringField) =>
@@ -245,8 +257,12 @@ const stringField =
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "string",
-      minLength: maybe(1 - c.undefined_props)(randomInt(c.min_length))(state),
-      maxLength: maybe(1 - c.undefined_props)(randomInt(c.max_length))(state),
+      ...map(
+        ({ minimum, maximum }: { minimum?: number; maximum?: number }) => ({
+          minLength: minimum,
+          maxLength: maximum,
+        })
+      )(interval(c.min_length, c.max_length, c.undefined_props))(state),
     },
   });
 
@@ -269,8 +285,7 @@ const numericField =
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "number",
-      minimum: maybe(1 - c.undefined_props)(randomFloat(c.minimum))(state),
-      maximum: maybe(1 - c.undefined_props)(randomFloat(c.maximum))(state),
+      ...interval(c.minimum, c.maximum, c.undefined_props)(state),
     },
   });
 
@@ -335,12 +350,70 @@ const fieldList = (c: cfg.FieldList) =>
     .with(P.array(P._), (c: cfg.Field[]) => seq(c.map(field(""))))
     .otherwise((c) => fieldGroup(c));
 
-const tableResource = (c: cfg.TableResource) => (state: RandState) => ({
-  name: uniqueId(identifier(c.table_name))(state),
-  description: maybe(1 - c.undefined_props)(description(c.description))(state),
-  fields: fieldList(c.fields)(state),
-  data: [],
-});
+const integerFieldTypeData = (f: m.IntegerFieldType) =>
+  map((i: number) => i.toString())(
+    randomInt([
+      f.minimum ?? Number.MIN_SAFE_INTEGER,
+      f.maximum ?? Number.MAX_SAFE_INTEGER,
+    ])
+  );
+
+const numberFieldTypeData = (f: m.NumberFieldType) =>
+  map((i: number) => i.toString())(
+    randomFloat([f.minimum ?? Number.MIN_VALUE, f.maximum ?? Number.MAX_VALUE])
+  );
+
+const enumIntegerFieldTypeData =
+  (f: m.EnumIntegerFieldType) => (state: RandState) => {
+    const level = state.faker.helpers.arrayElement(f.levels);
+    return level.value.toString();
+  };
+
+const enumStringFieldTypeData =
+  (f: m.EnumStringFieldType) => (state: RandState) => {
+    const level = state.faker.helpers.arrayElement(f.levels);
+    return level;
+  };
+
+const stringFieldTypeData = (f: m.StringFieldType) =>
+  description({ n_words: [5, 10], style: "words" });
+
+const fieldTypeData = (f: m.FieldType) =>
+  match(f)
+    .with({ type: "integer" }, (f) => integerFieldTypeData(f))
+    .with({ type: "number" }, (f) => numberFieldTypeData(f))
+    .with({ type: "enum_integer" }, (f) => enumIntegerFieldTypeData(f))
+    .with({ type: "enum_string" }, (f) => enumStringFieldTypeData(f))
+    .with({ type: "string" }, (f) => stringFieldTypeData(f))
+    .exhaustive();
+
+const fieldData = (f: m.Field) => (state: RandState) => [
+  f.name,
+  fieldTypeData(f.fieldType)(state),
+];
+
+const toObject = <T extends string>(xs: T[][]): Record<T, T> =>
+  Object.fromEntries(xs);
+
+const tableData = (fields: m.Field[], nRows: cfg.IntRange) => {
+  const rowGen = map(toObject)(seq(fields.map((f) => fieldData(f))));
+  return batch(nRows)(rowGen);
+};
+
+const tableResource =
+  (c: cfg.TableResource) =>
+  (state: RandState): m.TableResource => {
+    const fields = fieldList(c.fields)(state);
+    const data = tableData(fields, [100, 200])(state);
+    return {
+      name: uniqueId(identifier(c.table_name))(state),
+      description: maybe(1 - c.undefined_props)(description(c.description))(
+        state
+      ),
+      fields,
+      data,
+    };
+  };
 
 const batchTableResource = (c: cfg.BatchTableResource) => {
   return batch(c.n_tables)(tableResource(c.generator));
