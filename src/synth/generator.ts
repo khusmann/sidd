@@ -250,6 +250,17 @@ const interval =
     }
   };
 
+const renameIntervalLength = ({
+  minimum,
+  maximum,
+}: {
+  minimum?: number;
+  maximum?: number;
+}) => ({
+  minLength: minimum,
+  maxLength: maximum,
+});
+
 const stringField =
   (measureName: string) =>
   (c: cfg.StringField) =>
@@ -257,12 +268,9 @@ const stringField =
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "string",
-      ...map(
-        ({ minimum, maximum }: { minimum?: number; maximum?: number }) => ({
-          minLength: minimum,
-          maxLength: maximum,
-        })
-      )(interval(c.min_length, c.max_length, c.undefined_props))(state),
+      ...map(renameIntervalLength)(
+        interval(c.min_length, c.max_length, c.undefined_props)
+      )(state),
     },
   });
 
