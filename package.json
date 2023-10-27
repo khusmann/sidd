@@ -11,6 +11,7 @@
     "@types/node": "^20.8.8",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "buffer": "^5.5.0||^6.0.0",
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^9.0.0",
     "eslint-config-standard-with-typescript": "^39.1.1",
@@ -26,6 +27,7 @@
   },
   "dependencies": {
     "@faker-js/faker": "^8.2.0",
+    "danfojs": "^1.1.2",
     "parcel": "^2.10.1",
     "ts-pattern": "^5.0.5",
     "zod": "^3.22.4"
