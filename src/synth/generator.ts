@@ -368,7 +368,10 @@ const integerFieldTypeData = (f: m.IntegerFieldType) =>
 
 const numberFieldTypeData = (f: m.NumberFieldType) =>
   map((i: number) => i.toString())(
-    randomFloat([f.minimum ?? Number.MIN_VALUE, f.maximum ?? Number.MAX_VALUE])
+    randomFloat([
+      f.minimum ?? Number.MIN_SAFE_INTEGER,
+      f.maximum ?? Number.MAX_SAFE_INTEGER,
+    ])
   );
 
 const enumIntegerFieldTypeData =
