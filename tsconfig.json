@@ -3,7 +3,7 @@
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     "target": "es2016",
-    "lib": ["es6"],
+    "lib": ["es6", "dom"],
     "module": "commonjs",
     "rootDir": "src",
     "types": ["./types/dfd.d/ts"],
