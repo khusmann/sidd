@@ -2,27 +2,18 @@ import * as d3 from "d3";
 
 import { getElementOrThrow } from "./utils";
 
-import { generateDataPackage } from "./synth/generator";
-
-const synthDataPackage = generateDataPackage();
-
-const frame = new dfd.DataFrame(synthDataPackage.resources[0].data);
-
-frame.print();
-
-// Main code
-
-const viewer = getElementOrThrow("viewer");
-
-// Declare the chart dimensions and margins.
-const width = viewer.offsetWidth;
-const height = viewer.offsetHeight;
-const marginTop = 20;
-const marginRight = 20;
-const marginBottom = 45;
-const marginLeft = 40;
+type ViewerDimensions = {
+  width: number;
+  height: number;
+  marginTop: number;
+  marginRight: number;
+  marginBottom: number;
+  marginLeft: number;
+};
 
 const missingnessViewer = (currVar: any) => {
+  const { width, height, marginTop, marginBottom } = getDimensions();
+
   const missingness = currVar.missingness;
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
@@ -82,6 +73,8 @@ const missingnessViewer = (currVar: any) => {
 };
 
 const codedViewer = (currVar: any) => {
+  const { width, height, marginTop, marginBottom } = getDimensions();
+
   const stats = currVar.stats;
 
   const svg = d3.create("svg").attr("width", width).attr("height", height);
@@ -145,6 +138,9 @@ const codedViewer = (currVar: any) => {
 };
 
 const numericViewer = (currVar: any) => {
+  const { width, height, marginTop, marginBottom, marginLeft, marginRight } =
+    getDimensions();
+
   const stats = currVar.stats;
 
   const x = d3
@@ -250,6 +246,8 @@ bars
 };
 
 const placeholderViewer = (message: string) => {
+  const { width, height } = getDimensions();
+
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
   svg
@@ -299,6 +297,21 @@ const setViewer = (
   }
 };
 
+// Viewer Methods
+
+const viewer = getElementOrThrow("viewer");
+
+const getDimensions = (): ViewerDimensions => {
+  return {
+    width: viewer.offsetWidth,
+    height: viewer.offsetHeight,
+    marginTop: 20,
+    marginRight: 20,
+    marginBottom: 45,
+    marginLeft: 40,
+  };
+};
+
 const setViewerElement = <
   GElement extends Element,
   Datum,
@@ -317,7 +330,5 @@ const setViewerElement = <
   }
   viewer.append(node);
 };
-
-setViewer();
 
 export { setViewer };
