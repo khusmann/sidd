@@ -1,5 +1,10 @@
 import * as d3 from "d3";
-
+import type {
+  Variable,
+  VariableStats,
+  CategoricalVariableStats,
+  ContinuousVariableStats,
+} from "./types";
 import { getElementOrThrow } from "./utils";
 
 type ViewerDimensions = {
@@ -11,7 +16,7 @@ type ViewerDimensions = {
   marginLeft: number;
 };
 
-const missingnessViewer = (currVar: any) => {
+const missingnessViewer = (currVar: Variable<VariableStats>) => {
   const { width, height, marginTop, marginBottom } = getDimensions();
 
   const missingness = currVar.missingness;
@@ -72,7 +77,7 @@ const missingnessViewer = (currVar: any) => {
   return svg;
 };
 
-const codedViewer = (currVar: any) => {
+const codedViewer = (currVar: Variable<CategoricalVariableStats>) => {
   const { width, height, marginTop, marginBottom } = getDimensions();
 
   const stats = currVar.stats;
@@ -137,7 +142,7 @@ const codedViewer = (currVar: any) => {
   return svg;
 };
 
-const numericViewer = (currVar: any) => {
+const numericViewer = (currVar: Variable<ContinuousVariableStats>) => {
   const { width, height, marginTop, marginBottom, marginLeft, marginRight } =
     getDimensions();
 

@@ -1,3 +1,10 @@
+import type {
+  Variable,
+  TextVariableStats,
+  ContinuousVariableStats,
+  CategoricalVariableStats,
+} from "./types";
+
 let idCounter = 0;
 
 const fakeDescriptions = [
@@ -9,7 +16,7 @@ function getRandom(array: string[]) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-function fakeTextVariable(name: string) {
+function fakeTextVariable(name: string): Variable<TextVariableStats> {
   const groups = name.split("_");
   return {
     id: idCounter++,
@@ -37,7 +44,9 @@ function fakeTextVariable(name: string) {
   };
 }
 
-function fakeCategoricalVariable(name: string) {
+function fakeCategoricalVariable(
+  name: string
+): Variable<CategoricalVariableStats> {
   const groups = name.split("_");
   return {
     id: idCounter++,
@@ -95,7 +104,9 @@ function fakeCategoricalVariable(name: string) {
   };
 }
 
-function fakeContinuousVariable(name: string) {
+function fakeContinuousVariable(
+  name: string
+): Variable<ContinuousVariableStats> {
   const groups = name.split("_");
   return {
     id: idCounter++,
