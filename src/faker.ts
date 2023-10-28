@@ -1,19 +1,18 @@
-//sample data
-var id_counter = 0;
+let idCounter = 0;
 
 const fakeDescriptions = [
   "This is a short variable description",
   "This is a long variable description. This is a long variable description. This is a long variable description. This is a long variable description.",
 ];
 
-function getRandom(array) {
+function getRandom(array: string[]) {
   return array[Math.floor(Math.random() * array.length)];
 }
 
-function fakeTextVariable(name) {
+function fakeTextVariable(name: string) {
   const groups = name.split("_");
   return {
-    id: id_counter++,
+    id: idCounter++,
     name,
     description: getRandom(fakeDescriptions),
     type: "text",
@@ -38,10 +37,10 @@ function fakeTextVariable(name) {
   };
 }
 
-function fakeCategoricalVariable(name) {
+function fakeCategoricalVariable(name: string) {
   const groups = name.split("_");
   return {
-    id: id_counter++,
+    id: idCounter++,
     name,
     description: getRandom(fakeDescriptions),
     type: "categorical",
@@ -96,10 +95,10 @@ function fakeCategoricalVariable(name) {
   };
 }
 
-function fakeContinuousVariable(name) {
+function fakeContinuousVariable(name: string) {
   const groups = name.split("_");
   return {
-    id: id_counter++,
+    id: idCounter++,
     name,
     description: getRandom(fakeDescriptions),
     type: "real",

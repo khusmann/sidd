@@ -1,9 +1,11 @@
 import { TabulatorFull as Tabulator } from "tabulator-tables";
-import * as faker from "./faker.ts";
+import { setViewer } from "./render";
+import { getElementOrThrow } from "./utils";
+import * as faker from "./faker";
 
 const dataJson = "{{}}";
 
-function get_data() {
+function getData() {
   try {
     return JSON.parse(dataJson);
   } catch (e) {
@@ -11,21 +13,24 @@ function get_data() {
   }
 }
 
-const alldata = get_data();
+const alldata = getData();
 
 const bundledata = alldata.bundle;
 
-const bundle_mappings = {
+const bundleMappings = {
   "bundle-name": bundledata.name,
   "bundle-version": `(${bundledata.package_version})`,
   "bundle-description": bundledata.description,
 };
 
-Object.keys(bundle_mappings).forEach((key) => {
-  document.getElementById(key).innerHTML = bundle_mappings[key];
-});
+let key: keyof typeof bundleMappings;
+for (key in bundleMappings) {
+  getElementOrThrow(key).innerHTML = bundleMappings[key];
+}
 
-const uniqTypes = Array.from(new Set(alldata.tabledata.map((d) => d.type)));
+const uniqTypes = Array.from(
+  new Set(alldata.tabledata.map((d: any) => d.type))
+);
 
 const tabledata = alldata.tabledata;
 const table = new Tabulator("#codebook-table", {
@@ -37,7 +42,7 @@ const table = new Tabulator("#codebook-table", {
   rowSelectedBackground: "#69b3a2",
   rowSelectedBackgroundHover: "#69b3a2",
   columns: [
-    //Define Table Columns
+    // Define Table Columns
     {
       title: "Variable",
       field: "name",
@@ -87,59 +92,61 @@ const table = new Tabulator("#codebook-table", {
   ],
 });
 
-var display_state = "values";
-var curr_row = null;
+type DisplayState = "values" | "missingness";
 
-table.on("rowSelected", function (row) {
-  curr_row = row.getData();
-  setViewer(curr_row, display_state);
+let displayState: DisplayState = "values";
+let currRow: any = null;
+
+table.on("rowSelected", function (row: any) {
+  currRow = row.getData();
+  setViewer(currRow, displayState);
 });
-table.on("rowMouseEnter", function (e, row) {
+table.on("rowMouseEnter", function (e: any, row: any) {
   if (table.getSelectedData().length === 0) {
-    curr_row = row.getData();
-    setViewer(curr_row, display_state);
+    currRow = row.getData();
+    setViewer(currRow, displayState);
   }
 });
 
-const values_button = document.getElementById("values-button");
-const missingness_button = document.getElementById("missingness-button");
+const valuesButton = getElementOrThrow("values-button");
+const missingnessButton = getElementOrThrow("missingness-button");
 
-function set_state(state) {
-  display_state = state;
-  if (display_state === "values") {
-    values_button.classList.add("selected-toggle");
-    missingness_button.classList.remove("selected-toggle");
+function setState(state: DisplayState) {
+  displayState = state;
+  if (displayState === "values") {
+    valuesButton.classList.add("selected-toggle");
+    missingnessButton.classList.remove("selected-toggle");
   } else {
-    missingness_button.classList.add("selected-toggle");
-    values_button.classList.remove("selected-toggle");
+    missingnessButton.classList.add("selected-toggle");
+    valuesButton.classList.remove("selected-toggle");
   }
-  setViewer(curr_row, display_state);
+  setViewer(currRow, displayState);
 }
 
-function toggle_state() {
-  if (display_state === "values") {
-    set_state("missingness");
+function toggleState() {
+  if (displayState === "values") {
+    setState("missingness");
   } else {
-    set_state("values");
+    setState("values");
   }
 }
 
-values_button.onclick = function () {
-  set_state("values");
+valuesButton.onclick = function () {
+  setState("values");
 };
 
-missingness_button.onclick = function () {
-  set_state("missingness");
+missingnessButton.onclick = function () {
+  setState("missingness");
 };
 
-function toggle_listener(event) {
-  var name = event.key;
-  var code = event.code;
+function toggleListener(event: any) {
+  // const name = event.key;
+  const code = event.code;
   // if it is the left or right shift key, toggle the state
   if (code === "ShiftLeft" || code === "ShiftRight") {
-    toggle_state();
+    toggleState();
   }
 }
 
-document.addEventListener("keydown", toggle_listener, false);
-document.addEventListener("keyup", toggle_listener, false);
+document.addEventListener("keydown", toggleListener, false);
+document.addEventListener("keyup", toggleListener, false);

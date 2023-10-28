@@ -1,5 +1,7 @@
 import * as d3 from "d3";
 
+import { getElementOrThrow } from "./utils";
+
 import { generateDataPackage } from "./synth/generator";
 
 const synthDataPackage = generateDataPackage();
@@ -10,6 +12,8 @@ frame.print();
 
 // Main code
 
+const viewer = getElementOrThrow("viewer");
+
 // Declare the chart dimensions and margins.
 const width = viewer.offsetWidth;
 const height = viewer.offsetHeight;
@@ -18,11 +22,13 @@ const marginRight = 20;
 const marginBottom = 45;
 const marginLeft = 40;
 
-const renderMissingnessViewer = (curr_var) => {
-  const missingness = curr_var.missingness;
+const renderMissingnessViewer = (currVar: any) => {
+  const missingness = currVar.missingness;
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
-  const maxCount = d3.max(missingness, (d) => d.count);
+  const maxCount =
+    d3.max(missingness, (d: any) => d.count as number) ??
+    Number.MAX_SAFE_INTEGER;
 
   const x = d3
     .scaleLinear()
@@ -32,7 +38,7 @@ const renderMissingnessViewer = (curr_var) => {
   const y = d3
     .scaleBand()
     .range([marginTop, height - marginBottom])
-    .domain(missingness.map((d) => `${d.label}`))
+    .domain(missingness.map((d: any) => `${d.label}`))
     .padding(0.1);
 
   svg
@@ -47,7 +53,7 @@ const renderMissingnessViewer = (curr_var) => {
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "bottom")
     //          .style("font-size", "10px")
-    .text(`${curr_var.name} (missingness)`);
+    .text(`${currVar.name} (missingness)`);
 
   const bars = svg
     .selectAll("myRect")
@@ -60,37 +66,29 @@ const renderMissingnessViewer = (curr_var) => {
   bars
     .append("rect")
     .attr("x", x(0))
-    .attr("y", function (d) {
-      return y(`${d.label}`);
-    })
-    .attr("width", function (d) {
-      return x(d.count);
-    })
+    .attr("y", (d: any) => y(`${d.label}`) ?? 0)
+    .attr("width", (d: any) => x(d.count))
     .attr("height", y.bandwidth());
 
   bars
     .append("text")
-    .text(function (d) {
-      return `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)`;
-    })
-    .attr("y", function (d) {
-      return y(`${d.label}`) + y.bandwidth() / 2 + 5;
-    })
-    .attr("x", function (d) {
-      return x(d.count) + 5;
-    })
+    .text((d: any) => `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)` ?? 0)
+    .attr("y", (d: any) => y(`${d.label}`) ?? 0 + y.bandwidth() / 2 + 5)
+    .attr("x", (d: any) => x(d.count) + 5)
     .style("text-anchor", "left")
     .style("font-size", "10px");
 
   return svg;
 };
 
-const renderCodedViewer = (curr_var) => {
-  const stats = curr_var.stats;
+const renderCodedViewer = (currVar: any) => {
+  const stats = currVar.stats;
 
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
-  const maxCount = d3.max(stats.items, (d) => d.count);
+  const maxCount =
+    d3.max(stats.items, (d: any) => d.count as number) ??
+    Number.MAX_SAFE_INTEGER;
 
   const x = d3
     .scaleLinear()
@@ -100,7 +98,7 @@ const renderCodedViewer = (curr_var) => {
   const y = d3
     .scaleBand()
     .range([marginTop, height - marginBottom])
-    .domain(stats.items.map((d) => `${d.label} (${d.value})`))
+    .domain(stats.items.map((d: any) => `${d.label} (${d.value})`))
     .padding(0.1);
 
   svg
@@ -115,7 +113,7 @@ const renderCodedViewer = (curr_var) => {
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "bottom")
     //          .style("font-size", "10px")
-    .text(curr_var.name);
+    .text(currVar.name);
 
   const bars = svg
     .selectAll("myRect")
@@ -128,40 +126,35 @@ const renderCodedViewer = (curr_var) => {
   bars
     .append("rect")
     .attr("x", x(0))
-    .attr("y", function (d) {
-      return y(`${d.label} (${d.value})`);
-    })
-    .attr("width", function (d) {
-      return x(d.count);
-    })
+    .attr("y", (d: any) => y(`${d.label} (${d.value})`) ?? 0)
+    .attr("width", (d: any) => x(d.count))
     .attr("height", y.bandwidth());
 
   bars
     .append("text")
-    .text(function (d) {
-      return `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)`;
-    })
-    .attr("y", function (d) {
-      return y(`${d.label} (${d.value})`) + y.bandwidth() / 2 + 5;
-    })
-    .attr("x", function (d) {
-      return x(d.count) + 5;
-    })
+    .text((d: any) => `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)` ?? 0)
+    .attr(
+      "y",
+      (d: any) => y(`${d.label} (${d.value})`) ?? 0 + y.bandwidth() / 2 + 5
+    )
+    .attr("x", (d: any) => x(d.count) + 5)
     .style("text-anchor", "left")
     .style("font-size", "10px");
 
   return svg;
 };
 
-const renderNumericViewer = (curr_var) => {
-  const stats = curr_var.stats;
+const renderNumericViewer = (currVar: any) => {
+  const stats = currVar.stats;
 
   const x = d3
     .scaleLinear()
     .domain([stats.min, stats.max])
     .range([marginLeft, width - marginRight]);
 
-  const maxCount = d3.max(stats.freqs, (d) => d.count);
+  const maxCount =
+    d3.max(stats.freqs, (d: any) => d.count as number) ??
+    Number.MAX_SAFE_INTEGER;
 
   const y = d3
     .scaleLinear()
@@ -171,10 +164,10 @@ const renderNumericViewer = (curr_var) => {
   // Create the SVG container.
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
-  const formatted_mean = d3.format(".1f")(stats.mean);
-  const formatted_sd = d3.format(".1f")(stats.sd);
-  const fomatted_min = d3.format(".1f")(stats.min);
-  const formatted_max = d3.format(".1f")(stats.max);
+  const formattedMean = d3.format(".1f")(stats.mean);
+  const formattedSd = d3.format(".1f")(stats.sd);
+  const formattedMin = d3.format(".1f")(stats.min);
+  const formattedMax = d3.format(".1f")(stats.max);
 
   svg
     .append("text")
@@ -183,7 +176,7 @@ const renderNumericViewer = (curr_var) => {
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "top")
     //          .style("font-size", "10px")
-    .text(`μ = ${formatted_mean}, σ = ${formatted_sd}`);
+    .text(`μ = ${formattedMean}, σ = ${formattedSd}`);
 
   svg
     .append("text")
@@ -192,7 +185,7 @@ const renderNumericViewer = (curr_var) => {
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "bottom")
     //          .style("font-size", "10px")
-    .text(curr_var.name);
+    .text(currVar.name);
 
   svg
     .append("text")
@@ -201,7 +194,7 @@ const renderNumericViewer = (curr_var) => {
     .attr("text-anchor", "start")
     .attr("dominant-baseline", "top")
     //          .style("font-size", "10px")
-    .text(`min = ${fomatted_min}`);
+    .text(`min = ${formattedMin}`);
 
   svg
     .append("text")
@@ -210,7 +203,7 @@ const renderNumericViewer = (curr_var) => {
     .attr("text-anchor", "end")
     .attr("dominant-baseline", "top")
     //          .style("font-size", "10px")
-    .text(`max = ${formatted_max}`);
+    .text(`max = ${formattedMax}`);
 
   // Add the x-axis.
   svg
@@ -233,18 +226,10 @@ const renderNumericViewer = (curr_var) => {
 
   bars
     .append("rect")
-    .attr("x", function (d) {
-      return x(d.min);
-    })
-    .attr("y", function (d) {
-      return y(d.count);
-    })
-    .attr("width", function (d) {
-      return x(d.max) - x(d.min);
-    })
-    .attr("height", function (d) {
-      return y(0) - y(d.count);
-    });
+    .attr("x", (d: any) => x(d.min) ?? 0)
+    .attr("y", (d: any) => y(d.count) ?? 0)
+    .attr("width", (d: any) => x(d.max) - x(d.min))
+    .attr("height", (d: any) => y(0) - y(d.count));
 
   /*
 bars
@@ -264,7 +249,7 @@ bars
   return svg;
 };
 
-const renderPlaceholderViewer = (message) => {
+const renderPlaceholderViewer = (message: string) => {
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
   svg
@@ -278,18 +263,18 @@ const renderPlaceholderViewer = (message) => {
   return svg;
 };
 
-const renderViewer = (curr_var) => {
-  if (curr_var && curr_var.stats) {
-    const stype = curr_var.stats.stype;
+const renderViewer = (currVar?: any) => {
+  if (currVar !== undefined && currVar.stats !== undefined) {
+    const stype = currVar.stats.stype;
     if (
       stype === "categorical" ||
       stype === "ordinal" ||
       stype === "multiselect"
     ) {
-      return renderCodedViewer(curr_var);
+      return renderCodedViewer(currVar);
     }
     if (stype === "real" || stype === "integer") {
-      return renderNumericViewer(curr_var);
+      return renderNumericViewer(currVar);
     }
   }
   return renderPlaceholderViewer(
@@ -297,26 +282,36 @@ const renderViewer = (curr_var) => {
   );
 };
 
-const renderMissingness = (curr_var) => {
-  if (curr_var) {
-    return renderMissingnessViewer(curr_var);
+const renderMissingness = (currVar?: any) => {
+  if (currVar !== undefined) {
+    return renderMissingnessViewer(currVar);
   }
   return renderPlaceholderViewer(
     "Select a variable to view its missingness distribution"
   );
 };
 
-window.setViewer = (curr_var = null, display_state) => {
+const setViewer = (
+  currVar: any = undefined,
+  displayState: "missingness" | "values" = "values"
+) => {
   const render =
-    display_state === "missingness"
-      ? renderMissingness(curr_var).node()
-      : renderViewer(curr_var).node();
+    displayState === "missingness"
+      ? renderMissingness(currVar).node()
+      : renderViewer(currVar).node();
+
+  if (render === null) {
+    throw new Error("Could not render viewer");
+  }
 
   // Append the SVG element.
-  if (viewer.firstChild) {
+  if (viewer.firstChild !== null) {
     viewer.removeChild(viewer.firstChild);
   }
+
   viewer.append(render);
 };
 
 setViewer();
+
+export { setViewer };

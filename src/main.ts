@@ -1,5 +1,5 @@
-import * as render from "./render.ts";
-import * as table from "./table.ts";
+import * as render from "./render";
+import * as table from "./table";
 
 console.log(render);
 console.log(table);
