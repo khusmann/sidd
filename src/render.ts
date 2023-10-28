@@ -288,7 +288,7 @@ const renderViewer = (curr_var) => {
     ) {
       return renderCodedViewer(curr_var);
     }
-    if (stype === "real" || stype == "integer") {
+    if (stype === "real" || stype === "integer") {
       return renderNumericViewer(curr_var);
     }
   }
