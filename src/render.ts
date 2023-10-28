@@ -22,7 +22,7 @@ const marginRight = 20;
 const marginBottom = 45;
 const marginLeft = 40;
 
-const renderMissingnessViewer = (currVar: any) => {
+const missingnessViewer = (currVar: any) => {
   const missingness = currVar.missingness;
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
@@ -81,7 +81,7 @@ const renderMissingnessViewer = (currVar: any) => {
   return svg;
 };
 
-const renderCodedViewer = (currVar: any) => {
+const codedViewer = (currVar: any) => {
   const stats = currVar.stats;
 
   const svg = d3.create("svg").attr("width", width).attr("height", height);
@@ -144,7 +144,7 @@ const renderCodedViewer = (currVar: any) => {
   return svg;
 };
 
-const renderNumericViewer = (currVar: any) => {
+const numericViewer = (currVar: any) => {
   const stats = currVar.stats;
 
   const x = d3
@@ -249,7 +249,7 @@ bars
   return svg;
 };
 
-const renderPlaceholderViewer = (message: string) => {
+const placeholderViewer = (message: string) => {
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
   svg
@@ -263,53 +263,59 @@ const renderPlaceholderViewer = (message: string) => {
   return svg;
 };
 
-const renderViewer = (currVar?: any) => {
-  if (currVar !== undefined && currVar.stats !== undefined) {
-    const stype = currVar.stats.stype;
-    if (
-      stype === "categorical" ||
-      stype === "ordinal" ||
-      stype === "multiselect"
-    ) {
-      return renderCodedViewer(currVar);
-    }
-    if (stype === "real" || stype === "integer") {
-      return renderNumericViewer(currVar);
-    }
+const variableViewer = (currVar: any) => {
+  const stype = currVar.stats.stype;
+  if (
+    stype === "categorical" ||
+    stype === "ordinal" ||
+    stype === "multiselect"
+  ) {
+    return codedViewer(currVar);
   }
-  return renderPlaceholderViewer(
-    "Select a numeric or coded variable to view its distribution."
-  );
-};
+  if (stype === "real" || stype === "integer") {
+    return numericViewer(currVar);
+  }
 
-const renderMissingness = (currVar?: any) => {
-  if (currVar !== undefined) {
-    return renderMissingnessViewer(currVar);
-  }
-  return renderPlaceholderViewer(
-    "Select a variable to view its missingness distribution"
-  );
+  return placeholderViewer(`Unknown variable type ${stype}`);
 };
 
 const setViewer = (
   currVar: any = undefined,
   displayState: "missingness" | "values" = "values"
 ) => {
-  const render =
-    displayState === "missingness"
-      ? renderMissingness(currVar).node()
-      : renderViewer(currVar).node();
+  if (currVar === undefined) {
+    const message =
+      displayState === "missingness"
+        ? "Select a variable to view its missingness distribution"
+        : "Select a numeric or coded variable to view its distribution.";
+    setViewerElement(placeholderViewer(message));
+  } else {
+    const render =
+      displayState === "missingness"
+        ? missingnessViewer(currVar)
+        : variableViewer(currVar);
 
-  if (render === null) {
-    throw new Error("Could not render viewer");
+    setViewerElement(render);
+  }
+};
+
+const setViewerElement = <
+  GElement extends Element,
+  Datum,
+  PElement extends d3.BaseType,
+  PDatum,
+>(
+  element: d3.Selection<GElement, Datum, PElement, PDatum>
+) => {
+  const node = element.node();
+  if (node === null) {
+    throw new Error("Element is missing node");
   }
 
-  // Append the SVG element.
   if (viewer.firstChild !== null) {
     viewer.removeChild(viewer.firstChild);
   }
-
-  viewer.append(render);
+  viewer.append(node);
 };
 
 setViewer();
