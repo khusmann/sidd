@@ -198,7 +198,7 @@ function fakeContinuousVariable(
 }
 
 const variableStats = (
-  v: m.Field,
+  v: m.AnyField,
   data: dfdt.DataFrame
 ): Variable<VariableStats> => {
   const name = v.name;

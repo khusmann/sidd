@@ -40,19 +40,21 @@ export type FieldType =
   | EnumIntegerFieldType
   | EnumStringFieldType;
 
-export type Field = {
+export type Field<FieldT extends FieldType> = {
   name: string;
-  fieldType: FieldType;
+  fieldType: FieldT;
   description?: string;
   required?: boolean;
   unique?: boolean;
   missingValues?: string[];
 };
 
+export type AnyField = Field<FieldType>;
+
 export type TableResource = {
   name: string;
   description?: string;
-  fields: Field[];
+  fields: AnyField[];
   data: Array<Record<string, string>>;
 };
 

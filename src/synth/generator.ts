@@ -218,7 +218,7 @@ const fieldBase =
 const integerField =
   (measureName: string) =>
   (c: cfg.IntegerField) =>
-  (state: RandState): m.Field => ({
+  (state: RandState): m.Field<m.IntegerFieldType> => ({
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "integer",
@@ -229,7 +229,7 @@ const integerField =
 const enumIntegerField =
   (measureName: string) =>
   (c: cfg.EnumIntegerField) =>
-  (state: RandState): m.Field => ({
+  (state: RandState): m.Field<m.EnumIntegerFieldType> => ({
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "enum_integer",
@@ -264,7 +264,7 @@ const renameIntervalLength = ({
 const stringField =
   (measureName: string) =>
   (c: cfg.StringField) =>
-  (state: RandState): m.Field => ({
+  (state: RandState): m.Field<m.StringFieldType> => ({
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "string",
@@ -277,7 +277,7 @@ const stringField =
 const enumStringField =
   (measureName: string) =>
   (c: cfg.EnumStringField) =>
-  (state: RandState): m.Field => ({
+  (state: RandState): m.Field<m.EnumStringFieldType> => ({
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "enum_string",
@@ -289,7 +289,7 @@ const enumStringField =
 const numericField =
   (measureName: string) =>
   (c: cfg.NumericField) =>
-  (state: RandState): m.Field => ({
+  (state: RandState): m.Field<m.NumberFieldType> => ({
     ...fieldBase(measureName)(c)(state),
     fieldType: {
       type: "number",
@@ -398,7 +398,7 @@ const fieldTypeData = (f: m.FieldType) =>
     .with({ type: "string" }, (f) => stringFieldTypeData(f))
     .exhaustive();
 
-const fieldData = (f: m.Field) => (state: RandState) => [
+const fieldData = (f: m.AnyField) => (state: RandState) => [
   f.name,
   fieldTypeData(f.fieldType)(state),
 ];
@@ -406,7 +406,7 @@ const fieldData = (f: m.Field) => (state: RandState) => [
 const toObject = <T extends string>(xs: T[][]): Record<T, T> =>
   Object.fromEntries(xs);
 
-const tableData = (fields: m.Field[], nRows: cfg.IntRange) => {
+const tableData = (fields: m.AnyField[], nRows: cfg.IntRange) => {
   const rowGen = map(toObject)(seq(fields.map((f) => fieldData(f))));
   return batch(nRows)(rowGen);
 };
