@@ -56,6 +56,7 @@ export type TableResource = {
   description?: string;
   fields: AnyField[];
   data: Array<Record<string, string>>;
+  missingValues?: string[];
 };
 
 export type Package = {

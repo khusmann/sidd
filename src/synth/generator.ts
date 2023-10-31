@@ -398,16 +398,32 @@ const fieldTypeData = (f: m.FieldType) =>
     .with({ type: "string" }, (f) => stringFieldTypeData(f))
     .exhaustive();
 
-const fieldData = (f: m.AnyField) => (state: RandState) => [
-  f.name,
-  fieldTypeData(f.fieldType)(state),
-];
+const missingData =
+  (miss: string[]) =>
+  ({ faker }: RandState) =>
+    faker.helpers.arrayElement(miss);
+
+const fieldData =
+  (f: m.AnyField, globalMissing: string[]) => (state: RandState) => {
+    const miss = f.missingValues ?? globalMissing ?? [];
+    if (miss.length > 0 && state.faker.datatype.boolean({ probability: 0.1 })) {
+      return [f.name, missingData(miss)(state)];
+    } else {
+      return [f.name, fieldTypeData(f.fieldType)(state)];
+    }
+  };
 
 const toObject = <T extends string>(xs: T[][]): Record<T, T> =>
   Object.fromEntries(xs);
 
-const tableData = (fields: m.AnyField[], nRows: cfg.IntRange) => {
-  const rowGen = map(toObject)(seq(fields.map((f) => fieldData(f))));
+const tableData = (
+  fields: m.AnyField[],
+  nRows: cfg.IntRange,
+  globalMissing: string[]
+) => {
+  const rowGen = map(toObject)(
+    seq(fields.map((f) => fieldData(f, globalMissing)))
+  );
   return batch(nRows)(rowGen);
 };
 
@@ -415,7 +431,10 @@ const tableResource =
   (c: cfg.TableResource) =>
   (state: RandState): m.TableResource => {
     const fields = fieldList(c.fields)(state);
-    const data = tableData(fields, [100, 200])(state);
+    const globalMissing = maybe(1 - c.undefined_props)(
+      missingValues(c.missing_values)
+    )(state);
+    const data = tableData(fields, [100, 200], globalMissing ?? [])(state);
     return {
       name: uniqueId(identifier(c.table_name))(state),
       description: maybe(1 - c.undefined_props)(description(c.description))(
@@ -423,6 +442,7 @@ const tableResource =
       ),
       fields,
       data,
+      missingValues: globalMissing,
     };
   };
 

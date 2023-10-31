@@ -197,19 +197,33 @@ function fakeContinuousVariable(
   };
 }
 
+const maskMatching = (col: dfdt.Series, values: string[]) => {
+  return col.values.map((v) => typeof v === "string" && values.includes(v));
+};
+
 const variableStats = (
   v: m.AnyField,
-  data: dfdt.DataFrame
+  data: dfdt.DataFrame,
+  globalMissingValues: string[] | undefined
 ): Variable<VariableStats> => {
   const name = v.name;
   const groups = name.split("_");
+  const missingValues = v.missingValues ?? globalMissingValues ?? [];
+
+  const nMissing = maskMatching(data.column(name), missingValues).reduce(
+    (a, b) => a + Number(b),
+    0
+  );
+
+  const nValid = data.shape[0] - nMissing;
+
   return {
     id: idCounter++,
     name,
     description: v.description ?? "(No description)",
-    type: "text",
-    num_valid: 100,
-    num_missing: 20,
+    type: v.fieldType.type,
+    num_valid: nValid,
+    num_missing: nMissing,
     group: groups[0],
     stats: {
       stype: "text",
@@ -227,6 +241,10 @@ const variableStats = (
       },
     ],
   };
+};
+
+const tableStats = (r: m.TableResource, data: dfdt.DataFrame) => {
+  return r.fields.map((f) => variableStats(f, data, r.missingValues));
 };
 
 const generateTestData = () => {
@@ -249,7 +267,7 @@ const generateTestData = () => {
       fakeContinuousVariable("child_height"),
       fakeTextVariable("child_skill"),
       fakeCategoricalVariable("child_grade"),
-      ...resource.fields.map((f) => variableStats(f, data)),
+      ...tableStats(resource, data),
     ],
   };
 };
