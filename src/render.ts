@@ -69,7 +69,7 @@ const missingnessViewer = (currVar: Variable<VariableStats>) => {
   bars
     .append("text")
     .text((d: any) => `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)` ?? 0)
-    .attr("y", (d: any) => y(`${d.label}`) ?? 0 + y.bandwidth() / 2 + 5)
+    .attr("y", (d: any) => (y(`${d.label}`) ?? 0) + y.bandwidth() / 2 + 5)
     .attr("x", (d: any) => x(d.count) + 5)
     .style("text-anchor", "left")
     .style("font-size", "10px");
@@ -133,7 +133,7 @@ const codedViewer = (currVar: Variable<CategoricalVariableStats>) => {
     .text((d: any) => `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)` ?? 0)
     .attr(
       "y",
-      (d: any) => y(`${d.label} (${d.value})`) ?? 0 + y.bandwidth() / 2 + 5
+      (d: any) => (y(`${d.label} (${d.value})`) ?? 0) + y.bandwidth() / 2 + 5
     )
     .attr("x", (d: any) => x(d.count) + 5)
     .style("text-anchor", "left")
@@ -279,6 +279,10 @@ const variableViewer = (currVar: any) => {
     return numericViewer(currVar);
   }
 
+  if (stype === "text") {
+    return placeholderViewer(`Text variable ${currVar.name}`);
+  }
+
   return placeholderViewer(`Unknown variable type ${stype}`);
 };
 
@@ -309,7 +313,7 @@ const viewer = getElementOrThrow("viewer");
 const getDimensions = (): ViewerDimensions => {
   return {
     width: viewer.offsetWidth,
-    height: viewer.offsetHeight,
+    height: viewer.offsetHeight * 0.95,
     marginTop: 20,
     marginRight: 20,
     marginBottom: 45,

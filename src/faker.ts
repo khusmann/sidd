@@ -3,7 +3,14 @@ import type {
   TextVariableStats,
   ContinuousVariableStats,
   CategoricalVariableStats,
+  VariableStats,
 } from "./types";
+
+import type * as dfdt from "danfojs";
+
+import type * as m from "./synth/model";
+
+import * as synth from "./synth/generator";
 
 let idCounter = 0;
 
@@ -190,21 +197,61 @@ function fakeContinuousVariable(
   };
 }
 
-const testdata = {
-  bundle: {
-    name: "main/teacher_calibration",
-    package_version: "20230902.f63be38-dev",
-    description:
-      "Sample data bundle for ACES. Blah blah blah Blah blah blah Blah blah blah Blah blah blah Blah blah blah Blah blah blah Blah blah blah Blah blah blah Blah blah blah Blah blah blah ",
-  },
-  tabledata: [
-    fakeTextVariable("id_child"),
-    fakeCategoricalVariable("child_gender"),
-    fakeContinuousVariable("child_age"),
-    fakeContinuousVariable("child_height"),
-    fakeTextVariable("child_skill"),
-    fakeCategoricalVariable("child_grade"),
-  ],
+const variableStats = (
+  v: m.Field,
+  data: dfdt.DataFrame
+): Variable<VariableStats> => {
+  const name = v.name;
+  const groups = name.split("_");
+  return {
+    id: idCounter++,
+    name,
+    description: v.description ?? "(No description)",
+    type: "text",
+    num_valid: 100,
+    num_missing: 20,
+    group: groups[0],
+    stats: {
+      stype: "text",
+    },
+    missingness: [
+      {
+        label: "UNKNOWN_MISSING_REASON",
+        count: 100,
+        pct: 0.5,
+      },
+      {
+        label: "ITEM_NOT_DISPLAYED",
+        count: 20,
+        pct: 0.1,
+      },
+    ],
+  };
 };
 
-export { testdata };
+const generateTestData = () => {
+  const synthDataPackage = synth.generateDataPackage();
+
+  const resource = synthDataPackage.resources[0];
+
+  const data = new dfd.DataFrame(resource.data);
+
+  return {
+    bundle: {
+      name: synthDataPackage.name,
+      package_version: "20230902.f63be38-dev",
+      description: synthDataPackage.description ?? "No description",
+    },
+    tabledata: [
+      fakeTextVariable("id_child"),
+      fakeCategoricalVariable("child_gender"),
+      fakeContinuousVariable("child_age"),
+      fakeContinuousVariable("child_height"),
+      fakeTextVariable("child_skill"),
+      fakeCategoricalVariable("child_grade"),
+      ...resource.fields.map((f) => variableStats(f, data)),
+    ],
+  };
+};
+
+export { generateTestData };

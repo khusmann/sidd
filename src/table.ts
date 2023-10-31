@@ -1,7 +1,7 @@
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import { setViewer } from "./render";
 import { getElementOrThrow } from "./utils";
-import * as faker from "./faker";
+import { generateTestData } from "./faker";
 
 type DisplayState = "values" | "missingness";
 
@@ -146,7 +146,7 @@ const setup = () => {
     try {
       return JSON.parse(dataJson);
     } catch (e) {
-      return faker.testdata;
+      return generateTestData();
     }
   }
 
@@ -158,7 +158,9 @@ const setup = () => {
 
   setupMissingValueButtons();
 
-  setViewer();
+  window.addEventListener("load", (event) => {
+    setViewer();
+  });
 };
 
 export { setup };
