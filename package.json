@@ -9,7 +9,6 @@
   },
   "bin": "build/cli.js",
   "devDependencies": {
-    "@parcel/transformer-sass": "^2.10.1",
     "@types/d3": "^7.4.2",
     "@types/node": "^20.8.8",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
@@ -22,20 +21,20 @@
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
     "nodemon": "^3.0.1",
-    "prettier": "^3.0.3",
-    "process": "^0.11.10",
-    "typescript": "*"
-  },
-  "resolutions": {
-    "htmlnano": "2.0.3"
+    "prettier": "^3.0.3"
   },
   "dependencies": {
     "@faker-js/faker": "^8.2.0",
+    "@parcel/transformer-sass": "^2.10.1",
     "d3": "^7.8.5",
     "danfojs": "^1.1.2",
     "parcel": "^2.10.1",
     "tabulator-tables": "^5.5.2",
     "ts-pattern": "^5.0.5",
+    "typescript": "*",
     "zod": "^3.22.4"
+  },
+  "resolutions": {
+    "htmlnano": "2.0.3"
   }
 }
