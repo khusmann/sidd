@@ -5,7 +5,7 @@
     "build": "tsc && chmod a+x build/cli.js",
     "sidd": "node build/cli.js",
     "start-cli": "nodemon",
-    "start": "parcel src/test.html"
+    "start": "parcel src/codebook.html --no-cache"
   },
   "bin": "build/cli.js",
   "devDependencies": {
