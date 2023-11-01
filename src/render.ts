@@ -165,10 +165,10 @@ const numericViewer = (currVar: Variable<ContinuousVariableStats>) => {
   // Create the SVG container.
   const svg = d3.create("svg").attr("width", width).attr("height", height);
 
-  const formattedMean = d3.format(".1f")(stats.mean);
-  const formattedSd = d3.format(".1f")(stats.sd);
-  const formattedMin = d3.format(".1f")(stats.min);
-  const formattedMax = d3.format(".1f")(stats.max);
+  const formattedMean = stats.mean.toPrecision(2);
+  const formattedSd = stats.sd.toPrecision(2);
+  const formattedMin = stats.min.toPrecision(2);
+  const formattedMax = stats.max.toPrecision(2);
 
   svg
     .append("text")
@@ -176,7 +176,7 @@ const numericViewer = (currVar: Variable<ContinuousVariableStats>) => {
     .attr("y", marginTop + 10)
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "top")
-    //          .style("font-size", "10px")
+    .style("font-size", "12px")
     .text(`μ = ${formattedMean}, σ = ${formattedSd}`);
 
   svg
@@ -185,7 +185,7 @@ const numericViewer = (currVar: Variable<ContinuousVariableStats>) => {
     .attr("y", height - 5)
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "bottom")
-    //          .style("font-size", "10px")
+    .style("font-size", "12px")
     .text(currVar.name);
 
   svg
@@ -194,7 +194,7 @@ const numericViewer = (currVar: Variable<ContinuousVariableStats>) => {
     .attr("y", marginTop + 10)
     .attr("text-anchor", "start")
     .attr("dominant-baseline", "top")
-    //          .style("font-size", "10px")
+    .style("font-size", "12px")
     .text(`min = ${formattedMin}`);
 
   svg
@@ -203,7 +203,7 @@ const numericViewer = (currVar: Variable<ContinuousVariableStats>) => {
     .attr("y", marginTop + 10)
     .attr("text-anchor", "end")
     .attr("dominant-baseline", "top")
-    //          .style("font-size", "10px")
+    .style("font-size", "12px")
     .text(`max = ${formattedMax}`);
 
   // Add the x-axis.
