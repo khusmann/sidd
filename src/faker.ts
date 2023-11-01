@@ -12,7 +12,7 @@ import { match } from "ts-pattern";
 
 import type * as dfdt from "danfojs";
 
-import type * as m from "./synth/model";
+import type * as m from "./model";
 
 import * as synth from "./synth/generator";
 
