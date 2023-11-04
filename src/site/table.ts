@@ -8,8 +8,8 @@ type DisplayState = "values" | "missingness";
 let displayState: DisplayState = "values";
 let currRow: any = null;
 
-const setupTable = (packageStats: PackageStats) => {
-  const currTableStats = packageStats.tables[0];
+const setupTable = (packageStats: PackageStats, resourceIdx: number) => {
+  const currTableStats = packageStats.tables[resourceIdx];
 
   setElementHtmlOrThrow(
     "bundle-name",
@@ -137,8 +137,8 @@ const setupMissingValueButtons = () => {
   document.addEventListener("keyup", toggleListener, false);
 };
 
-const setup = (packageStats: PackageStats) => {
-  setupTable(packageStats);
+const setup = (packageStats: PackageStats, resourceIdx: number) => {
+  setupTable(packageStats, resourceIdx);
 
   setupMissingValueButtons();
 

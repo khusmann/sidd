@@ -2,6 +2,15 @@ import { setup } from "./table";
 import { packageStats } from "../model/stats";
 import { decode } from "base-64";
 import { inflate } from "pako";
+import { getElementOrThrow } from "./utils";
+
+getElementOrThrow("open-nav").onclick = () => {
+  getElementOrThrow("nav-content").style.width = "max-content";
+};
+
+getElementOrThrow("nav-content").onclick = () => {
+  getElementOrThrow("nav-content").style.width = "0";
+};
 
 // import * as fs from "fs";
 // const statsData = fs.readFileSync(".sidd_stats.json", "utf8");
@@ -24,5 +33,17 @@ if (statsData === undefined) {
 
   const stats = packageStats(parsedData);
 
-  setup(stats);
+  const navLinks = stats.tables.map((r, idx) => {
+    const elem = document.createElement("a");
+    elem.href = "#";
+    elem.innerText = r.name;
+    elem.onclick = () => {
+      setup(stats, idx);
+    };
+    return elem;
+  });
+
+  getElementOrThrow("nav-content").append(...navLinks);
+
+  setup(stats, 0);
 }
