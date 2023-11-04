@@ -7,6 +7,7 @@ import { promises as fs } from "fs";
 import { withTempFile, withTempDir } from "./cli_utils";
 import { deflate } from "pako";
 import { encode } from "base-64";
+import { fromDataPackage, dataPackage } from "../model/frictionless";
 import * as path from "path";
 
 type GlobalConfig = {
@@ -25,7 +26,14 @@ type BuildCmdConfig = GlobalConfig & {
 };
 
 const loadDataPackageStats = async (pkgPath?: string) => {
-  return generateDataPackage();
+  if (pkgPath === undefined) {
+    return generateDataPackage();
+  } else {
+    const pkgFile = await fs.readFile(pkgPath, "utf8");
+    const pkgDir = path.dirname(pkgPath);
+    const pkg = dataPackage.parse(JSON.parse(pkgFile));
+    return fromDataPackage(pkg, pkgDir);
+  }
 };
 
 const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
