@@ -39,7 +39,7 @@ const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
         port: config.port,
       },
       env: {
-        SIDD_STATS: JSON.stringify(stats),
+        SIDD_STATS: compressData(JSON.stringify(stats)),
       },
     });
 

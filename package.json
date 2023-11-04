@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "build": "tsc && chmod a+x build/cli/cli.js",
-    "sidd": "node build/cli/cli.js",
+    "sidd": "ts-node src/cli/cli.ts",
     "start-cli": "nodemon",
-    "start": "parcel src/site/codebook.html --no-cache"
+    "start": "ts-node src/cli/cli.ts serve"
   },
   "bin": "build/cli/cli.js",
   "devDependencies": {
@@ -24,7 +24,8 @@
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
     "nodemon": "^3.0.1",
-    "prettier": "^3.0.3"
+    "prettier": "^3.0.3",
+    "ts-node": "^10.9.1"
   },
   "dependencies": {
     "@faker-js/faker": "^8.2.0",
