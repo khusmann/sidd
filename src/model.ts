@@ -61,6 +61,7 @@ export type TableResource = {
 
 export type Package = {
   name: string;
+  version?: string;
   description?: string;
   resources: TableResource[];
 };

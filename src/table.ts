@@ -1,27 +1,25 @@
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import { setViewer } from "./render";
-import { getElementOrThrow } from "./utils";
-import { generateTestData } from "./faker";
+import { setElementHtmlOrThrow, getElementOrThrow } from "./utils";
+import type { PackageStats } from "./stats";
 
 type DisplayState = "values" | "missingness";
 
 let displayState: DisplayState = "values";
 let currRow: any = null;
 
-const setupTitles = (bundledata: any) => {
-  const bundleMappings = {
-    "bundle-name": bundledata.name,
-    "bundle-version": `(${bundledata.package_version})`,
-    "bundle-description": bundledata.description,
-  };
+const setupTable = (packageStats: PackageStats) => {
+  const currTableStats = packageStats.tables[0];
 
-  let key: keyof typeof bundleMappings;
-  for (key in bundleMappings) {
-    getElementOrThrow(key).innerHTML = bundleMappings[key];
-  }
-};
+  setElementHtmlOrThrow(
+    "bundle-name",
+    `${packageStats.name}/${currTableStats.name}`
+  );
+  setElementHtmlOrThrow("bundle-version", `(${packageStats.version})`);
+  setElementHtmlOrThrow("bundle-description", currTableStats.description);
 
-const setupTable = (tabledata: any) => {
+  const tabledata = currTableStats.fields;
+
   const uniqTypes = Array.from(new Set(tabledata.map((d: any) => d.type)));
   const table = new Tabulator("#codebook-table", {
     data: tabledata,
@@ -139,22 +137,8 @@ const setupMissingValueButtons = () => {
   document.addEventListener("keyup", toggleListener, false);
 };
 
-const setup = () => {
-  const dataJson = "{{}}";
-
-  function getData() {
-    try {
-      return JSON.parse(dataJson);
-    } catch (e) {
-      return generateTestData();
-    }
-  }
-
-  const alldata = getData();
-
-  setupTitles(alldata.bundle);
-
-  setupTable(alldata.tabledata);
+const setup = (packageStats: PackageStats) => {
+  setupTable(packageStats);
 
   setupMissingValueButtons();
 

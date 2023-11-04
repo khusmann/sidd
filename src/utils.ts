@@ -6,4 +6,9 @@ const getElementOrThrow = (id: string) => {
   return elem;
 };
 
-export { getElementOrThrow };
+const setElementHtmlOrThrow = (id: string, html: string) => {
+  const elem = getElementOrThrow(id);
+  elem.innerHTML = html;
+};
+
+export { getElementOrThrow, setElementHtmlOrThrow };

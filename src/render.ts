@@ -4,8 +4,11 @@ import type {
   VariableStats,
   CategoricalVariableStats,
   ContinuousVariableStats,
-} from "./types";
+} from "./stats";
 import { getElementOrThrow } from "./utils";
+
+// Bug workaround: https://github.com/parcel-bundler/parcel/issues/8792
+console.log(d3);
 
 type ViewerDimensions = {
   width: number;

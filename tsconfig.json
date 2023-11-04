@@ -6,7 +6,7 @@
     "lib": ["es6", "dom"],
     "module": "commonjs",
     "rootDir": "src",
-    "types": ["./types/dfd.d/ts"],
+    "types": ["./types/dfd.d.ts"],
     "resolveJsonModule": true,
     "allowJs": true,
     "outDir": "build",
