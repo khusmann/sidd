@@ -4,7 +4,7 @@ import type {
   VariableStats,
   CategoricalVariableStats,
   ContinuousVariableStats,
-} from "./stats";
+} from "../model/stats";
 import { getElementOrThrow } from "./utils";
 
 // Bug workaround: https://github.com/parcel-bundler/parcel/issues/8792

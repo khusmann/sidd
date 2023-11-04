@@ -2,7 +2,7 @@
 
 import { Parcel } from "@parcel/core";
 import yargs from "yargs";
-import { generateDataPackage } from "./synth/generator";
+import { generateDataPackage } from "../synth/generator";
 import { promises as fs } from "fs";
 import { withTempFile, withTempDir } from "./cli_utils";
 import { deflate } from "pako";
@@ -33,7 +33,7 @@ const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
     const stats = await loadDataPackageStats(config.pkgPath);
 
     const bundler = new Parcel({
-      entries: "./src/codebook.html",
+      entries: "./src/site/codebook.html",
       defaultConfig: "@parcel/config-default",
       serveOptions: {
         port: config.port,
@@ -50,7 +50,6 @@ const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
 };
 
 const compressData = (data: string) => {
-  console.log(data.length);
   const compressedData = deflate(data);
 
   const stringData = Array.from(compressedData)
@@ -58,7 +57,6 @@ const compressData = (data: string) => {
     .join("");
 
   const result = encode(stringData);
-  console.log(result.length);
   return result;
 };
 
@@ -67,7 +65,7 @@ const buildCmd = async <T extends BuildCmdConfig>(config: T) => {
     const stats = await loadDataPackageStats(config.pkgPath);
 
     const bundler = new Parcel({
-      entries: "./src/codebook.html",
+      entries: "./src/site/codebook.html",
       defaultConfig: "@parcel/config-default",
       mode: config.mode,
       defaultTargetOptions: {

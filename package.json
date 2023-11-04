@@ -2,12 +2,12 @@
   "name": "sidd",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc && chmod a+x build/cli.js",
-    "sidd": "node build/cli.js",
+    "build": "tsc && chmod a+x build/cli/cli.js",
+    "sidd": "node build/cli/cli.js",
     "start-cli": "nodemon",
-    "start": "parcel src/codebook.html --no-cache"
+    "start": "parcel src/site/codebook.html --no-cache"
   },
-  "bin": "build/cli.js",
+  "bin": "build/cli/cli.js",
   "devDependencies": {
     "@types/base-64": "^1.0.1",
     "@types/d3": "^7.4.2",

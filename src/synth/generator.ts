@@ -6,7 +6,7 @@ import { match, P } from "ts-pattern";
 
 import * as cfg from "./config";
 
-import type * as m from "../model";
+import type * as m from "../model/model";
 
 // Types
 

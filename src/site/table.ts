@@ -1,7 +1,7 @@
 import { TabulatorFull as Tabulator } from "tabulator-tables";
 import { setViewer } from "./render";
 import { setElementHtmlOrThrow, getElementOrThrow } from "./utils";
-import type { PackageStats } from "./stats";
+import type { PackageStats } from "../model/stats";
 
 type DisplayState = "values" | "missingness";
 

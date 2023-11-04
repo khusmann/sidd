@@ -1,5 +1,5 @@
 import { setup } from "./table";
-import { packageStats } from "./stats";
+import { packageStats } from "../model/stats";
 import { decode } from "base-64";
 import { inflate } from "pako";
 
