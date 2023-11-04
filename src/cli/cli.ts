@@ -5,8 +5,9 @@ import yargs from "yargs";
 import { generateDataPackage } from "../synth/generator";
 import { promises as fs } from "fs";
 import { withTempFile, withTempDir } from "./cli_utils";
-import { deflate } from "pako";
-import { encode } from "base-64";
+import { packageStats } from "../model/stats";
+// import { deflate } from "pako";
+// import { encode } from "base-64";
 import { fromDataPackage, dataPackage } from "../model/frictionless";
 import * as path from "path";
 
@@ -27,12 +28,12 @@ type BuildCmdConfig = GlobalConfig & {
 
 const loadDataPackageStats = async (pkgPath?: string) => {
   if (pkgPath === undefined) {
-    return generateDataPackage();
+    return packageStats(generateDataPackage());
   } else {
     const pkgFile = await fs.readFile(pkgPath, "utf8");
     const pkgDir = path.dirname(pkgPath);
     const pkg = dataPackage.parse(JSON.parse(pkgFile));
-    return fromDataPackage(pkg, pkgDir);
+    return packageStats(fromDataPackage(pkg, pkgDir));
   }
 };
 
@@ -50,7 +51,7 @@ const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
         port: config.port,
       },
       env: {
-        SIDD_STATS: compressData(JSON.stringify(stats)),
+        SIDD_STATS: JSON.stringify(stats),
       },
     });
 
@@ -75,6 +76,7 @@ const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
   });
 };
 
+/*
 const compressData = (data: string) => {
   const compressedData = deflate(data);
 
@@ -85,6 +87,7 @@ const compressData = (data: string) => {
   const result = encode(stringData);
   return result;
 };
+*/
 
 const buildCmd = async <T extends BuildCmdConfig>(config: T) => {
   await withTempDir(async (tempdir) => {
@@ -98,7 +101,7 @@ const buildCmd = async <T extends BuildCmdConfig>(config: T) => {
         distDir: tempdir,
       },
       env: {
-        SIDD_STATS: compressData(JSON.stringify(stats)),
+        SIDD_STATS: JSON.stringify(stats),
       },
     });
 

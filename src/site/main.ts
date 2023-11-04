@@ -1,7 +1,7 @@
 import { setup } from "./table";
-import { packageStats } from "../model/stats";
-import { decode } from "base-64";
-import { inflate } from "pako";
+import type { PackageStats } from "../model/stats";
+// import { decode } from "base-64";
+// import { inflate } from "pako";
 import { getElementOrThrow } from "./utils";
 
 getElementOrThrow("open-nav").onclick = () => {
@@ -21,6 +21,7 @@ const statsData = process.env.SIDD_STATS;
 if (statsData === undefined) {
   throw new Error("SIDD_STATS environment variable not set");
 } else {
+  /*
   const strData = decode(statsData);
 
   const charData = strData.split("").map((x) => x.charCodeAt(0));
@@ -30,8 +31,8 @@ if (statsData === undefined) {
   });
 
   const parsedData = JSON.parse(uncompressedData);
-
-  const stats = packageStats(parsedData);
+  */
+  const stats = JSON.parse(statsData) as PackageStats;
 
   const navLinks = stats.tables.map((r, idx) => {
     const elem = document.createElement("a");

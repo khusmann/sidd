@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 
 import type * as dfdt from "danfojs";
+import * as dfd from "danfojs";
 
 import type * as m from "./model";
 
@@ -78,7 +79,7 @@ const maskMatching = (col: dfdt.Series, values: string[]) =>
   col.values.map((v) => typeof v === "string" && values.includes(v));
 
 const removeMatching = (col: dfdt.Series, values: string[]) =>
-  col.iloc(maskMatching(col, values).map((i) => !i));
+  col.iloc(maskMatching(col, values).map((i) => i === false));
 
 const stringStats = (
   v: m.Field<m.StringFieldType>,
