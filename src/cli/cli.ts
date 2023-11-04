@@ -38,6 +38,9 @@ const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
       serveOptions: {
         port: config.port,
       },
+      hmrOptions: {
+        port: config.port,
+      },
       env: {
         SIDD_STATS: compressData(JSON.stringify(stats)),
       },
@@ -45,7 +48,22 @@ const serveCmd = async <T extends ServeCmdConfig>(config: T) => {
 
     console.log(`Serving sidd on http://localhost:${config.port}`);
 
-    await bundler.watch();
+    await bundler.watch((err, event) => {
+      if (err !== undefined && err !== null) {
+        // fatal error
+        throw err;
+      }
+      if (event !== undefined) {
+        if (event.type === "buildSuccess") {
+          const bundles = event.bundleGraph.getBundles();
+          console.log(
+            `✨ Built ${bundles.length} bundles in ${event.buildTime}ms!`
+          );
+        } else if (event.type === "buildFailure") {
+          console.log(event.diagnostics);
+        }
+      }
+    });
   });
 };
 
@@ -80,6 +98,8 @@ const buildCmd = async <T extends BuildCmdConfig>(config: T) => {
     const bundles = bundleGraph.getBundles();
     console.log(`✨ Built ${bundles.length} bundles in ${buildTime}ms!`);
 
+    // TODO Use parcel filesystem instead:
+    // https://parceljs.org/features/parcel-api/#file-system
     await fs.copyFile(path.join(tempdir, "codebook.html"), config.output);
   });
 };
@@ -131,7 +151,7 @@ void yargs
           port: {
             alias: "p",
             type: "number",
-            default: 3000,
+            default: 1234,
             describe: "Port to serve on",
           },
         }),

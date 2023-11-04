@@ -6,7 +6,7 @@
     "lib": ["es6", "dom"],
     "module": "commonjs",
     "rootDir": "src",
-    "types": [],
+    "types": ["node"],
     "resolveJsonModule": true,
     "allowJs": true,
     "outDir": "build",
