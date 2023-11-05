@@ -111,6 +111,7 @@ const buildCmd = async <T extends BuildCmdConfig>(config: T) => {
 
     // TODO Use parcel filesystem instead:
     // https://parceljs.org/features/parcel-api/#file-system
+    await fs.mkdir(path.dirname(config.output), { recursive: true });
     await fs.copyFile(path.join(tempdir, "codebook.html"), config.output);
   });
 };
@@ -139,7 +140,7 @@ void yargs
           output: {
             alias: "o",
             type: "string",
-            default: "./codebook.html",
+            default: "./build/codebook.html",
           },
           mode: {
             alias: "m",
