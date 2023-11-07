@@ -79,7 +79,7 @@ const maskMatching = (col: dfdt.Series, values: string[]) =>
   col.values.map((v) => typeof v === "string" && values.includes(v));
 
 const removeMatching = (col: dfdt.Series, values: string[]) =>
-  col.iloc(maskMatching(col, values).map((i) => i === false));
+  col.iloc(maskMatching(col, values).map((i) => !i));
 
 const stringStats = (
   v: m.Field<m.StringFieldType>,
@@ -351,13 +351,14 @@ const variableStats = (
   };
 };
 
-const tableStats = (r: m.TableResource): TableStats => ({
-  name: r.name,
-  description: r.description ?? "(No description)",
-  fields: r.fields.map((f) =>
-    variableStats(f, new dfd.DataFrame(r.data), r.missingValues ?? [])
-  ),
-});
+const tableStats = (r: m.TableResource): TableStats => {
+  const tab = new dfd.DataFrame(r.data);
+  return {
+    name: r.name,
+    description: r.description ?? "(No description)",
+    fields: r.fields.map((f) => variableStats(f, tab, r.missingValues ?? [])),
+  };
+};
 
 const packageStats = (p: m.Package): PackageStats => ({
   name: p.name,
