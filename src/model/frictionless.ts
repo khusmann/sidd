@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type * as m from "./model";
 import { readFileSync } from "fs";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { parse } from "csv-parse/sync";
 import * as path from "path";
 
@@ -116,14 +116,67 @@ const dataPackage = z.object({
   resources: z.array(resource),
 });
 
-const fromField = (f: Field): m.Field<m.FieldType> => ({
+const fromBooleanField = (f: BooleanField): m.Field<m.EnumStringFieldType> => ({
   name: f.name,
+  description: f.description,
+  fieldType: {
+    type: "enum_string",
+    levels: ["true", "false"],
+  },
+  missingValues: f.missingValues,
+});
+
+const fromIntegerField = (
+  f: IntegerField
+): m.Field<m.IntegerFieldType | m.EnumIntegerFieldType> =>
+  match(f)
+    .with({ constraints: { enum: P.array(P.number) } }, (f) => ({
+      name: f.name,
+      description: f.description,
+      fieldType: {
+        type: "enum_integer" as const,
+        levels: f.constraints.enum.map((v) => ({
+          value: v,
+          label:
+            f.enumLabels !== undefined ? f.enumLabels[v.toString()] : undefined,
+        })),
+      },
+      missingValues: f.missingValues,
+    }))
+    .otherwise((f) => ({
+      name: f.name,
+      description: f.description,
+      fieldType: {
+        type: "integer" as const,
+      },
+      missingValues: f.missingValues,
+    }));
+
+const fromStringField = (f: StringField): m.Field<m.StringFieldType> => ({
+  name: f.name,
+  description: f.description,
   fieldType: {
     type: "string",
   },
-  description: f.description,
   missingValues: f.missingValues,
 });
+
+const fromNumberField = (f: NumberField): m.Field<m.NumberFieldType> => ({
+  name: f.name,
+  description: f.description,
+  fieldType: {
+    type: "number",
+  },
+  missingValues: f.missingValues,
+});
+
+const fromField = (f: Field): m.Field<m.FieldType> =>
+  match(f)
+    .with({ type: "boolean" }, (f) => fromBooleanField(f))
+    .with({ type: "integer" }, (f) => fromIntegerField(f))
+    .with({ type: "string" }, (f) => fromStringField(f))
+    .with({ type: "number" }, (f) => fromNumberField(f))
+    .exhaustive();
 
 const fromTableResourceInline = (r: InlineResource): m.TableResource => ({
   name: r.name,
@@ -162,6 +215,7 @@ const fromDataPackage = (p: DataPackage, basePath: string): m.Package => ({
 export type IntegerField = z.infer<typeof integerField>;
 export type NumberField = z.infer<typeof numberField>;
 export type StringField = z.infer<typeof stringField>;
+export type BooleanField = z.infer<typeof booleanField>;
 export type Field = z.infer<typeof field>;
 export type Schema = z.infer<typeof schema>;
 export type Resource = z.infer<typeof resource>;
