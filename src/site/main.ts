@@ -1,4 +1,4 @@
-import { setup } from "./table";
+import { setup, setupMissingValueButtons } from "./table";
 import type { PackageStats } from "../model/stats";
 // import { decode } from "base-64";
 // import { inflate } from "pako";
@@ -47,4 +47,5 @@ if (statsData === undefined) {
   getElementOrThrow("nav-content").append(...navLinks);
 
   setup(stats, 0);
+  setupMissingValueButtons();
 }

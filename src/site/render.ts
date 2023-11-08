@@ -290,7 +290,7 @@ const variableViewer = (currVar: any) => {
 };
 
 const setViewer = (
-  currVar: any = undefined,
+  currVar?: Variable<VariableStats>,
   displayState: "missingness" | "values" = "values"
 ) => {
   if (currVar === undefined) {

@@ -6,7 +6,9 @@ import type { PackageStats } from "../model/stats";
 type DisplayState = "values" | "missingness";
 
 let displayState: DisplayState = "values";
-let currRow: any = null;
+let currRow: any;
+
+let table: any;
 
 const setupTable = (packageStats: PackageStats, resourceIdx: number) => {
   const currTableStats = packageStats.tables[resourceIdx];
@@ -21,7 +23,12 @@ const setupTable = (packageStats: PackageStats, resourceIdx: number) => {
   const tabledata = currTableStats.fields;
 
   const uniqTypes = Array.from(new Set(tabledata.map((d: any) => d.type)));
-  const table = new Tabulator("#codebook-table", {
+
+  if (table !== undefined) {
+    table.destroy();
+  }
+
+  table = new Tabulator("#codebook-table", {
     data: tabledata,
     layout: "fitColumns",
     groupBy: ["group"],
@@ -140,11 +147,9 @@ const setupMissingValueButtons = () => {
 const setup = (packageStats: PackageStats, resourceIdx: number) => {
   setupTable(packageStats, resourceIdx);
 
-  setupMissingValueButtons();
-
   window.addEventListener("load", (event) => {
     setViewer();
   });
 };
 
-export { setup };
+export { setup, setupMissingValueButtons };
