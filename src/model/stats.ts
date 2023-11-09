@@ -1,6 +1,5 @@
 import { match } from "ts-pattern";
 
-import type * as dfdt from "danfojs";
 import * as dfd from "danfojs";
 
 import type * as m from "./model";
@@ -75,15 +74,15 @@ export type PackageStats = {
   tables: TableStats[];
 };
 
-const maskMatching = (col: dfdt.Series, values: string[]) =>
+const maskMatching = (col: dfd.Series, values: string[]) =>
   col.values.map((v) => typeof v === "string" && values.includes(v));
 
-const removeMatching = (col: dfdt.Series, values: string[]) =>
+const removeMatching = (col: dfd.Series, values: string[]) =>
   col.iloc(maskMatching(col, values).map((i) => !i));
 
 const stringStats = (
   v: m.Field<m.StringFieldType>,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): TextVariableStats => ({
   stype: "text",
@@ -91,7 +90,7 @@ const stringStats = (
 
 const enumStringStats = (
   v: m.Field<m.EnumStringFieldType>,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): CategoricalVariableStats => {
   const validValues = removeMatching(
@@ -121,7 +120,7 @@ const enumStringStats = (
 
 const enumIntegerStats = (
   v: m.Field<m.EnumIntegerFieldType>,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): CategoricalVariableStats => {
   const validValues = removeMatching(
@@ -154,7 +153,7 @@ const enumIntegerStats = (
 
 const integerStats = (
   v: m.Field<m.IntegerFieldType>,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): ContinuousVariableStats => {
   const validValues = removeMatching(
@@ -202,7 +201,7 @@ const integerStats = (
 
 const numberStats = (
   v: m.Field<m.NumberFieldType>,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): ContinuousVariableStats => {
   const validValues = removeMatching(
@@ -250,7 +249,7 @@ const numberStats = (
 
 const variableTypeStats = (
   v: m.AnyField,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): VariableStats =>
   match(v)
@@ -298,7 +297,7 @@ const variableTypeName = (v: m.AnyField): string =>
 
 const missingnessStats = (
   v: m.AnyField,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): MissingnessStats[] => {
   const missingValues = v.missingValues ?? globalMissingValues;
@@ -324,7 +323,7 @@ const missingnessStats = (
 
 const variableStats = (
   v: m.AnyField,
-  data: dfdt.DataFrame,
+  data: dfd.DataFrame,
   globalMissingValues: string[]
 ): Variable<VariableStats> => {
   const name = v.name;

@@ -1,7 +1,7 @@
 import { setup, setupMissingValueButtons } from "./table";
 import type { PackageStats } from "../model/stats";
-// import { decode } from "base-64";
-// import { inflate } from "pako";
+import { packageStats } from "../model/stats";
+import { generateDataPackage } from "../synth/generator";
 import { getElementOrThrow } from "./utils";
 
 getElementOrThrow("open-nav").onclick = () => {
@@ -12,40 +12,29 @@ getElementOrThrow("nav-content").onclick = () => {
   getElementOrThrow("nav-content").style.width = "0";
 };
 
-// import * as fs from "fs";
-// const statsData = fs.readFileSync(".sidd_stats.json", "utf8");
-// const stats = packageStats(JSON.parse(statsData));
+const getStats = (): PackageStats => {
+  const statsData = "__SIDD_STATS_DATA__";
 
-const statsData = process.env.SIDD_STATS;
+  try {
+    return JSON.parse(statsData) as PackageStats;
+  } catch (e) {
+    return packageStats(generateDataPackage());
+  }
+};
 
-if (statsData === undefined) {
-  throw new Error("SIDD_STATS environment variable not set");
-} else {
-  /*
-  const strData = decode(statsData);
+const stats = getStats();
 
-  const charData = strData.split("").map((x) => x.charCodeAt(0));
+const navLinks = stats.tables.map((r, idx) => {
+  const elem = document.createElement("a");
+  elem.href = "#";
+  elem.innerText = r.name;
+  elem.onclick = () => {
+    setup(stats, idx);
+  };
+  return elem;
+});
 
-  const uncompressedData = inflate(new Uint8Array(charData), {
-    to: "string",
-  });
+getElementOrThrow("nav-content").append(...navLinks);
 
-  const parsedData = JSON.parse(uncompressedData);
-  */
-  const stats = JSON.parse(statsData) as PackageStats;
-
-  const navLinks = stats.tables.map((r, idx) => {
-    const elem = document.createElement("a");
-    elem.href = "#";
-    elem.innerText = r.name;
-    elem.onclick = () => {
-      setup(stats, idx);
-    };
-    return elem;
-  });
-
-  getElementOrThrow("nav-content").append(...navLinks);
-
-  setup(stats, 0);
-  setupMissingValueButtons();
-}
+setup(stats, 0);
+setupMissingValueButtons();
