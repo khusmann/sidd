@@ -3,6 +3,9 @@ import type { PackageStats } from "../model/stats";
 import { packageStats } from "../model/stats";
 import { generateDataPackage } from "../synth/generator";
 import { getElementOrThrow } from "./utils";
+import { decode } from "base-64";
+import { inflate } from "pako";
+import { DATA_SETINAL } from "../setinal";
 
 getElementOrThrow("open-nav").onclick = () => {
   getElementOrThrow("nav-content").style.width = "max-content";
@@ -13,10 +16,14 @@ getElementOrThrow("nav-content").onclick = () => {
 };
 
 const getStats = (): PackageStats => {
-  const statsData = "__SIDD_STATS_DATA__";
-
+  const statsData = DATA_SETINAL;
   try {
-    return JSON.parse(statsData) as PackageStats;
+    const strData = decode(statsData);
+    const charData = strData.split("").map((x) => x.charCodeAt(0));
+    const uncompressedData = inflate(new Uint8Array(charData), {
+      to: "string",
+    });
+    return JSON.parse(uncompressedData) as PackageStats;
   } catch (e) {
     return packageStats(generateDataPackage());
   }

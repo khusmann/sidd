@@ -1,0 +1,1 @@
+export const DATA_SETINAL = "SIDD_DATA_SETINAL";

@@ -255,7 +255,7 @@
   dependencies:
     "@parcel/plugin" "2.10.1"
 
-"@parcel/config-default@2.10.1", "@parcel/config-default@^2.10.1":
+"@parcel/config-default@2.10.1":
   version "2.10.1"
   resolved "https://registry.yarnpkg.com/@parcel/config-default/-/config-default-2.10.1.tgz#5414113f42a841f775d257ed5d489f3a0eac67bf"
   integrity sha512-Yyv6NxM7fvA5AZH3+fVoxL5/eMZz/fWLWGYPHxe8KT2aYIvVPCQpdUaQ87JNGgzUsL/bgYDWA9da3FReGuBxIA==
@@ -292,7 +292,7 @@
     "@parcel/transformer-react-refresh-wrap" "2.10.1"
     "@parcel/transformer-svg" "2.10.1"
 
-"@parcel/core@2.10.1", "@parcel/core@^2.10.1":
+"@parcel/core@2.10.1":
   version "2.10.1"
   resolved "https://registry.yarnpkg.com/@parcel/core/-/core-2.10.1.tgz#6efe97ab12c053ae1c21baac4357864bdeb6411d"
   integrity sha512-d3ufgqp3nfxJJLFLiGccX3C2paF/mWFjhjltoLmeqtdR3SFfS8z1ysrC7WJqBlwHFwBtL8ZqjPquekGmaH2LoQ==
@@ -744,7 +744,7 @@
     "@parcel/utils" "2.10.1"
     react-refresh "^0.9.0"
 
-"@parcel/transformer-sass@^2.10.1":
+"@parcel/transformer-sass@2.10.1":
   version "2.10.1"
   resolved "https://registry.yarnpkg.com/@parcel/transformer-sass/-/transformer-sass-2.10.1.tgz#636ccc32f3882efef29fdad2aaa863ef8ce59eaf"
   integrity sha512-0X4Flq3x95qP+NwmB/I4ugcZ9gnyEwI+nyprSNY++jWO2Cq5tmPv1VVDbIatx4KuG8PIqjN6aIaPESSvBN+NIw==
