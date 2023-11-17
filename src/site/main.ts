@@ -15,6 +15,23 @@ getElementOrThrow("nav-content").onclick = () => {
   getElementOrThrow("nav-content").style.width = "0";
 };
 
+const modal = getElementOrThrow("filter-model");
+
+// Get the button that opens the modal
+const btn = getElementOrThrow("filter-btn");
+
+// When the user clicks on the button, open the modal
+btn.onclick = function () {
+  modal.style.display = "block";
+};
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function (event) {
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
+};
+
 const getStats = (): PackageStats => {
   const statsData = DATA_SETINAL;
   try {

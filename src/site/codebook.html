@@ -8,9 +8,24 @@
     </style>
   </head>
   <body>
+    <div id="filter-model" class="modal">
+      <div class="modal-content">
+        <h1>Select a filter</h1>
+        <div id="filter-values">
+          <a href="#">all</a>
+          <a href="#">VALUE_1</a>
+          <a href="#">VALUE_2</a>
+          <a href="#">VALUE_3</a>
+        </div>
+      </div>
+    </div>
     <div class="content">
       <header>
         <h1 id="bundle-name"></h1>
+        <h2 id="filter-btn">
+          <div class="triangle-icon"></div>
+          <span id="curr-filter">(all)</span>
+        </h2>
         <div id="bundle-version"></div>
         <p id="bundle-description"></p>
       </header>
