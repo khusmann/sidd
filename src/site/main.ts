@@ -53,12 +53,12 @@ const navLinks = stats.tables.map((r, idx) => {
   elem.href = "#";
   elem.innerText = r.name;
   elem.onclick = () => {
-    setup(stats, idx);
+    setup(stats, idx, "all");
   };
   return elem;
 });
 
 getElementOrThrow("nav-content").append(...navLinks);
 
-setup(stats, 0);
+setup(stats, 0, "all");
 setupMissingValueButtons();

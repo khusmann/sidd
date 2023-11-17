@@ -10,7 +10,40 @@ let currRow: any;
 
 let table: any;
 
-const setupTable = (packageStats: PackageStats, resourceIdx: number) => {
+const setupFilters = (
+  packageStats: PackageStats,
+  resourceIdx: number,
+  filter: string
+) => {
+  const content = getElementOrThrow("filter-values");
+  const modal = getElementOrThrow("filter-model");
+  const filterTxt = getElementOrThrow("curr-filter");
+
+  filterTxt.innerText = `(${filter})`;
+
+  content.innerHTML = "";
+
+  const values = ["all", "WAVE_1", "WAVE_2", "WAVE_3"];
+
+  const createLink = (value: string) => {
+    const elem = document.createElement("a");
+    elem.href = "#";
+    elem.innerText = value;
+    elem.onclick = () => {
+      setup(packageStats, resourceIdx, value);
+      modal.style.display = "none";
+    };
+    return elem;
+  };
+
+  content.append(...values.map(createLink));
+};
+
+const setupTable = (
+  packageStats: PackageStats,
+  resourceIdx: number,
+  filter: string
+) => {
   const currTableStats = packageStats.tables[resourceIdx];
 
   setElementHtmlOrThrow(
@@ -144,8 +177,13 @@ const setupMissingValueButtons = () => {
   document.addEventListener("keyup", toggleListener, false);
 };
 
-const setup = (packageStats: PackageStats, resourceIdx: number) => {
-  setupTable(packageStats, resourceIdx);
+const setup = (
+  packageStats: PackageStats,
+  resourceIdx: number,
+  filter: string
+) => {
+  setupFilters(packageStats, resourceIdx, filter);
+  setupTable(packageStats, resourceIdx, filter);
 
   window.addEventListener("load", (event) => {
     setViewer();
