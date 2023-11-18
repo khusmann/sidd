@@ -427,6 +427,20 @@ const tableData = (
   return batch(nRows)(rowGen);
 };
 
+const filterVariable = (fields: m.AnyField[]) => (state: RandState) => {
+  const enumFields = fields.filter(
+    (f) =>
+      f.fieldType.type === "enum_integer" || f.fieldType.type === "enum_string"
+  );
+
+  if (enumFields.length > 0) {
+    const field = state.faker.helpers.arrayElement(enumFields);
+    return field.name;
+  } else {
+    return undefined;
+  }
+};
+
 const tableResource =
   (c: cfg.TableResource) =>
   (state: RandState): m.TableResource => {
@@ -435,6 +449,7 @@ const tableResource =
       missingValues(c.missing_values)
     )(state);
     const data = tableData(fields, [100, 200], globalMissing ?? [])(state);
+    const fv = maybe(1 - c.undefined_props)(filterVariable(fields))(state);
     return {
       name: uniqueId(identifier(c.table_name))(state),
       description: maybe(1 - c.undefined_props)(description(c.description))(
@@ -442,6 +457,7 @@ const tableResource =
       ),
       fields,
       data,
+      filterVariable: fv,
       missingValues: globalMissing,
     };
   };

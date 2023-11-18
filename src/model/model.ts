@@ -57,6 +57,7 @@ export type TableResource = {
   fields: AnyField[];
   data: Array<Record<string, string>>;
   missingValues?: string[];
+  filterVariable?: string;
 };
 
 export type Package = {

@@ -17,20 +17,20 @@ const setupFilters = (
 ) => {
   const content = getElementOrThrow("filter-values");
   const modal = getElementOrThrow("filter-model");
-  const filterTxt = getElementOrThrow("curr-filter");
-
-  filterTxt.innerText = `(${filter})`;
 
   content.innerHTML = "";
 
-  const values = ["all", "WAVE_1", "WAVE_2", "WAVE_3"];
+  const values = packageStats.tables[resourceIdx].subsets.map((s) => ({
+    name: s.name,
+    label: s.label,
+  }));
 
-  const createLink = (value: string) => {
+  const createLink = (value: { name: string; label: string }) => {
     const elem = document.createElement("a");
     elem.href = "#";
-    elem.innerText = value;
+    elem.innerText = value.label;
     elem.onclick = () => {
-      setup(packageStats, resourceIdx, value);
+      setup(packageStats, resourceIdx, value.name);
       modal.style.display = "none";
     };
     return elem;
@@ -53,7 +53,15 @@ const setupTable = (
   setElementHtmlOrThrow("bundle-version", `(${packageStats.version})`);
   setElementHtmlOrThrow("bundle-description", currTableStats.description);
 
-  const tabledata = currTableStats.fields;
+  const subsetdata = currTableStats.subsets.find((s) => s.name === filter);
+
+  if (subsetdata === undefined) {
+    throw new Error(`Filter ${filter} not found`);
+  }
+
+  const tabledata = subsetdata.fields;
+
+  setElementHtmlOrThrow("curr-filter", `(${subsetdata.label})`);
 
   const uniqTypes = Array.from(new Set(tabledata.map((d: any) => d.type)));
 

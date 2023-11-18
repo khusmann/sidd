@@ -83,6 +83,7 @@ const schema = z.object({
 const baseResource = z.object({
   profile: z.literal("tabular-data-resource").optional(),
   name: z.string(),
+  filterVariable: z.string().optional(),
   schema,
 });
 
@@ -183,6 +184,7 @@ const fromTableResourceInline = (r: InlineResource): m.TableResource => ({
   data: r.data,
   fields: r.schema.fields.map(fromField),
   missingValues: r.schema.missingValues,
+  filterVariable: r.filterVariable,
 });
 
 const fromTableResourceCsv =
@@ -195,6 +197,7 @@ const fromTableResourceCsv =
     }),
     fields: r.schema.fields.map(fromField),
     missingValues: r.schema.missingValues,
+    filterVariable: r.filterVariable,
   });
 
 const fromTableResource =

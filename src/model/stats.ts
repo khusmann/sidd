@@ -61,10 +61,16 @@ export type MissingnessStats = {
   pct: number;
 };
 
+export type TableSubsetStats = {
+  name: string;
+  label: string;
+  fields: Array<Variable<VariableStats>>;
+};
+
 export type TableStats = {
   name: string;
   description: string;
-  fields: Array<Variable<VariableStats>>;
+  subsets: TableSubsetStats[];
 };
 
 export type PackageStats = {
@@ -350,12 +356,88 @@ const variableStats = (
   };
 };
 
+const getFilterLevels = (
+  fields: m.AnyField[],
+  globalMissingValues: string[],
+  filterVariable?: string
+) => {
+  if (filterVariable === undefined) {
+    return [];
+  }
+
+  const filterField = fields.find((f) => f.name === filterVariable);
+
+  if (filterField === undefined) {
+    return [];
+  }
+
+  const missingValues = filterField.missingValues ?? globalMissingValues;
+
+  if (filterField.fieldType.type === "enum_string") {
+    const realValues = filterField.fieldType.levels.filter(
+      (l) => !missingValues.includes(l)
+    );
+
+    return realValues.map((l) => ({
+      filterVariable,
+      filterValue: l,
+      filterLabel: l,
+    }));
+  }
+
+  if (filterField.fieldType.type === "enum_integer") {
+    const realValues = filterField.fieldType.levels.filter(
+      (l) => !missingValues.includes(l.value.toString())
+    );
+    return realValues.map((l) => ({
+      filterVariable,
+      filterValue: l.value.toString(),
+      filterLabel: l.label ?? l.value.toString(),
+    }));
+  }
+
+  return [];
+};
+
 const tableStats = (r: m.TableResource): TableStats => {
   const tab = new dfd.DataFrame(r.data);
+  const filterLevels = getFilterLevels(
+    r.fields,
+    r.missingValues ?? [],
+    r.filterVariable
+  );
+
   return {
     name: r.name,
     description: r.description ?? "(No description)",
-    fields: r.fields.map((f) => variableStats(f, tab, r.missingValues ?? [])),
+    subsets: [
+      {
+        name: "all",
+        label: "all",
+        fields: r.fields.map((f) =>
+          variableStats(f, tab, r.missingValues ?? [])
+        ),
+      },
+      ...filterLevels.map((l) => ({
+        name: l.filterValue,
+        label: l.filterLabel,
+        fields: r.fields.map((f) =>
+          variableStats(
+            f,
+            tab
+              .loc({
+                rows: tab
+                  .column(l.filterVariable)
+                  .asType("string")
+                  .str.search(`^${l.filterValue}$`)
+                  .ne(-1),
+              })
+              .resetIndex(),
+            r.missingValues ?? []
+          )
+        ),
+      })),
+    ],
   };
 };
 
