@@ -167,6 +167,17 @@ const integerStats = (
     v.missingValues ?? globalMissingValues
   ).asType("float32");
 
+  if (validValues.shape[0] === 0) {
+    return {
+      stype: "real",
+      min: 0,
+      max: 0,
+      mean: 0,
+      sd: 0,
+      freqs: [],
+    };
+  }
+
   const nBins = 10;
 
   const min = validValues.min();
@@ -214,6 +225,17 @@ const numberStats = (
     data.column(v.name),
     v.missingValues ?? globalMissingValues
   ).asType("float32");
+
+  if (validValues.shape[0] === 0) {
+    return {
+      stype: "real",
+      min: 0,
+      max: 0,
+      mean: 0,
+      sd: 0,
+      freqs: [],
+    };
+  }
 
   const nBins = 10;
 
