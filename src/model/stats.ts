@@ -136,7 +136,7 @@ const enumIntegerStats = (
 
   const n = validValues.shape[0];
 
-  const itemStats = v.fieldType.levels.map((l, idx) => {
+  const itemStats = v.fieldType.levels.map((l) => {
     const count = validValues
       .asType("string")
       .str.search(`^${l.value}$`)
@@ -144,7 +144,7 @@ const enumIntegerStats = (
       .sum();
     return {
       label: l.label ?? l.value.toString(),
-      value: idx,
+      value: parseInt(l.value.toString()),
       text: l.label ?? l.value.toString(),
       count,
       pct: count / n,
