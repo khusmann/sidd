@@ -18,8 +18,6 @@ const baseField = z.object({
   example: z.string().optional(),
   type: z.string().optional(),
   format: z.string().optional(),
-  enumOrdered: z.boolean().optional(),
-  enumLabels: z.record(z.string()).optional(),
   missingValues: z.array(z.string()).optional(),
 });
 
@@ -27,6 +25,15 @@ const integerField = baseField.extend({
   type: z.literal("integer"),
   format: z.literal("default").optional(),
   baseNumber: z.boolean().default(true),
+  categoriesOrdered: z.boolean().optional(),
+  categories: z
+    .union([
+      z.array(z.number().int()),
+      z.array(
+        z.object({ value: z.number().int(), label: z.string().optional() })
+      ),
+    ])
+    .optional(),
   constraints: baseConstraints
     .extend({
       minimum: z.number().int().optional(),
@@ -59,6 +66,13 @@ const numberField = baseField.extend({
 const stringField = baseField.extend({
   type: z.literal("string"),
   format: z.enum(["default", "email", "uri", "binary", "uuid"]).optional(),
+  categoriesOrdered: z.boolean().optional(),
+  categories: z
+    .union([
+      z.array(z.string()),
+      z.array(z.object({ value: z.string(), label: z.string().optional() })),
+    ])
+    .optional(),
   constraints: baseConstraints
     .extend({
       minLength: z.number().optional(),
@@ -131,16 +145,19 @@ const fromIntegerField = (
   f: IntegerField
 ): m.Field<m.IntegerFieldType | m.EnumIntegerFieldType> =>
   match(f)
-    .with({ constraints: { enum: P.array(P.number) } }, (f) => ({
+    .with({ categories: P.not(P.nullish) }, (f) => ({
       name: f.name,
       description: f.description,
       fieldType: {
         type: "enum_integer" as const,
-        levels: f.constraints.enum.map((v) => ({
-          value: v,
-          label:
-            f.enumLabels !== undefined ? f.enumLabels[v.toString()] : undefined,
-        })),
+        levels: f.categories.map((v) =>
+          match(v)
+            .with(P.number, (v) => ({ value: v, label: v.toString() }))
+            .otherwise((v) => ({
+              value: v.value,
+              label: v.label ?? v.value.toString(),
+            }))
+        ),
       },
       missingValues: f.missingValues,
     }))
