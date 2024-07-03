@@ -158,6 +158,7 @@ const fromIntegerField = (
               label: v.label ?? v.value.toString(),
             }))
         ),
+        ordered: f.categoriesOrdered,
       },
       missingValues: f.missingValues,
     }))
