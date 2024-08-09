@@ -16,6 +16,8 @@ load, as it generates a synthetic data set on the fly.
 
 Below is a screenshot of a typical run:
 
+![screenshot of typical run](https://github.com/user-attachments/assets/c54f3c1f-49dc-4d7b-8d25-bc53a5d88914)
+
 ## Installation
 
 To setup sidd, clone the repo and run:
