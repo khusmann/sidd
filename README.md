@@ -12,9 +12,9 @@ available data.
 For an example of the sort of report that is generated, follow
 [this link](https://github.com/khusmann/sidd/releases/download/v0.2.1/codebook.html)
 to download an example report. Note that the example report may take a moment to
-load, as it generates a synthetic data set on the fly.
+load, as it generates a synthetic (nonsense) data set on the fly.
 
-Below is a screenshot of a typical run:
+Below is a screenshot of a typical run with generated synthetic data:
 
 ![screenshot of typical run](https://github.com/user-attachments/assets/c54f3c1f-49dc-4d7b-8d25-bc53a5d88914)
 
