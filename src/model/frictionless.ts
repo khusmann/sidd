@@ -92,6 +92,7 @@ const field = z.discriminatedUnion("type", [
 const schema = z.object({
   fields: z.array(field),
   missingValues: z.array(z.string()).optional(),
+  primaryKey: z.array(z.string()).optional(),
 });
 
 const baseResource = z.object({
@@ -204,6 +205,7 @@ const fromTableResourceInline = (r: InlineResource): m.TableResource => ({
   data: r.data,
   fields: r.schema.fields.map(fromField),
   missingValues: r.schema.missingValues,
+  primaryKey: r.schema.primaryKey,
   filterVariable: r.filterVariable,
 });
 
@@ -218,6 +220,7 @@ const fromTableResourceCsv =
     }),
     fields: r.schema.fields.map(fromField),
     missingValues: r.schema.missingValues,
+    primaryKey: r.schema.primaryKey,
     filterVariable: r.filterVariable,
   });
 

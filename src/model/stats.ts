@@ -352,7 +352,8 @@ const missingnessStats = (
 const variableStats = (
   v: m.AnyField,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: string[],
+  primaryKey: string[]
 ): Variable<VariableStats> => {
   const name = v.name;
   const groups = name.split("_");
@@ -365,6 +366,8 @@ const variableStats = (
 
   const nValid = data.shape[0] - nMissing;
 
+  const currGroup = primaryKey.includes(v.name) ? "Primary Key" : groups[0];
+
   return {
     id: idCounter++,
     name,
@@ -372,7 +375,7 @@ const variableStats = (
     type: variableTypeName(v),
     num_valid: nValid,
     num_missing: nMissing,
-    group: groups[0],
+    group: currGroup,
     stats: variableTypeStats(v, data, globalMissingValues),
     missingness: missingnessStats(v, data, globalMissingValues),
   };
@@ -437,7 +440,7 @@ const tableStats = (r: m.TableResource): TableStats => {
         name: "all",
         label: "all",
         fields: r.fields.map((f) =>
-          variableStats(f, tab, r.missingValues ?? [])
+          variableStats(f, tab, r.missingValues ?? [], r.primaryKey ?? [])
         ),
       },
       ...filterLevels.map((l) => ({
@@ -455,7 +458,8 @@ const tableStats = (r: m.TableResource): TableStats => {
                   .ne(-1),
               })
               .resetIndex(),
-            r.missingValues ?? []
+            r.missingValues ?? [],
+            r.primaryKey ?? []
           )
         ),
       })),
