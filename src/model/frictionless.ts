@@ -97,6 +97,7 @@ const schema = z.object({
 const baseResource = z.object({
   profile: z.literal("tabular-data-resource").optional(),
   name: z.string(),
+  description: z.string().optional(),
   filterVariable: z.string().optional(),
   schema,
 });
@@ -199,6 +200,7 @@ const fromField = (f: Field): m.Field<m.FieldType> =>
 
 const fromTableResourceInline = (r: InlineResource): m.TableResource => ({
   name: r.name,
+  description: r.description,
   data: r.data,
   fields: r.schema.fields.map(fromField),
   missingValues: r.schema.missingValues,
@@ -209,6 +211,7 @@ const fromTableResourceCsv =
   (basePath: string) =>
   (r: CsvResource): m.TableResource => ({
     name: r.name,
+    description: r.description,
     data: parse(readFileSync(path.join(basePath, r.path), "utf8"), {
       columns: true,
       skip_empty_lines: true,
