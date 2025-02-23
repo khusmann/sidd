@@ -4,6 +4,7 @@ import type {
   VariableStats,
   CategoricalVariableStats,
   ContinuousVariableStats,
+  CategoricalStringVariableStats,
 } from "../model/stats";
 import { getElementOrThrow } from "./utils";
 
@@ -57,6 +58,68 @@ const missingnessViewer = (currVar: Variable<VariableStats>) => {
   const bars = svg
     .selectAll("myRect")
     .data(missingness)
+    .enter()
+    .append("g")
+    .attr("class", "bar")
+    .attr("transform", `translate(${width / 3 + 5},0)`);
+
+  bars
+    .append("rect")
+    .attr("x", x(0))
+    .attr("y", (d: any) => y(`${d.label}`) ?? 0)
+    .attr("width", (d: any) => x(d.count))
+    .attr("height", y.bandwidth());
+
+  bars
+    .append("text")
+    .text((d: any) => `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)` ?? 0)
+    .attr("y", (d: any) => (y(`${d.label}`) ?? 0) + y.bandwidth() / 2 + 5)
+    .attr("x", (d: any) => x(d.count) + 5)
+    .style("text-anchor", "left")
+    .style("font-size", "10px");
+
+  return svg;
+};
+
+const uncodedViewer = (currVar: Variable<CategoricalStringVariableStats>) => {
+  const { width, height, marginTop, marginBottom } = getDimensions();
+
+  const stats = currVar.stats;
+
+  const svg = d3.create("svg").attr("width", width).attr("height", height);
+
+  const maxCount =
+    d3.max(stats.items, (d: any) => d.count as number) ??
+    Number.MAX_SAFE_INTEGER;
+
+  const x = d3
+    .scaleLinear()
+    .domain([0, maxCount])
+    .range([0, width / 3]);
+
+  const y = d3
+    .scaleBand()
+    .range([marginTop, height - marginBottom])
+    .domain(stats.items.map((d: any) => `${d.label}`))
+    .padding(0.1);
+
+  svg
+    .append("g")
+    .attr("transform", `translate(${width / 3},0)`)
+    .call(d3.axisLeft(y));
+
+  svg
+    .append("text")
+    .attr("x", width / 2)
+    .attr("y", height - 5)
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "bottom")
+    //          .style("font-size", "10px")
+    .text(currVar.name);
+
+  const bars = svg
+    .selectAll("myRect")
+    .data(stats.items)
     .enter()
     .append("g")
     .attr("class", "bar")
@@ -277,6 +340,9 @@ const variableViewer = (currVar: any) => {
     stype === "multiselect"
   ) {
     return codedViewer(currVar);
+  }
+  if (stype === "categorical_string") {
+    return uncodedViewer(currVar);
   }
   if (stype === "real" || stype === "integer") {
     return numericViewer(currVar);

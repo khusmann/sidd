@@ -138,7 +138,7 @@ const fromBooleanField = (f: BooleanField): m.Field<m.EnumStringFieldType> => ({
   description: f.description,
   fieldType: {
     type: "enum_string",
-    levels: ["true", "false"],
+    levels: ["false", "true"],
   },
   missingValues: f.missingValues,
 });

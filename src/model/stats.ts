@@ -30,9 +30,21 @@ export type CategoricalVariableItemStats = {
   pct: number;
 };
 
+export type CategoricalStringVariableItemStats = {
+  label: string;
+  text: string;
+  count: number;
+  pct: number;
+};
+
 export type CategoricalVariableStats = {
   stype: "categorical";
   items: CategoricalVariableItemStats[];
+};
+
+export type CategoricalStringVariableStats = {
+  stype: "categorical_string";
+  items: CategoricalStringVariableItemStats[];
 };
 
 export type ContinousVariableFreqItem = {
@@ -53,6 +65,7 @@ export type ContinuousVariableStats = {
 export type VariableStats =
   | TextVariableStats
   | CategoricalVariableStats
+  | CategoricalStringVariableStats
   | ContinuousVariableStats;
 
 export type MissingnessStats = {
@@ -98,7 +111,7 @@ const enumStringStats = (
   v: m.Field<m.EnumStringFieldType>,
   data: dfd.DataFrame,
   globalMissingValues: string[]
-): CategoricalVariableStats => {
+): CategoricalStringVariableStats => {
   const validValues = removeMatching(
     data.column(v.name),
     v.missingValues ?? globalMissingValues
@@ -111,7 +124,6 @@ const enumStringStats = (
     const count = Number(counts.at(l) ?? 0);
     return {
       label: l,
-      value: idx,
       text: l,
       count,
       pct: count / n,
@@ -119,7 +131,7 @@ const enumStringStats = (
   });
 
   return {
-    stype: "categorical",
+    stype: "categorical_string",
     items: itemStats,
   };
 };
