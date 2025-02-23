@@ -1,6 +1,6 @@
 {
   "name": "sidd",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "scripts": {
     "build": "tsc && chmod a+x build/cli/cli.js && parcel build src/site/codebook.html --dist-dir ./build",
     "sidd": "ts-node src/cli/cli.ts",
