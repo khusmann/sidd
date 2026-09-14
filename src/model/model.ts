@@ -40,13 +40,22 @@ export type FieldType =
   | EnumIntegerFieldType
   | EnumStringFieldType;
 
+// A missing value marker as it appears in the data (`value`), and how to
+// display it (`label`; defaults to `value`).
+export type MissingValue = {
+  value: string;
+  label: string;
+};
+
 export type Field<FieldT extends FieldType> = {
   name: string;
   fieldType: FieldT;
   description?: string;
   required?: boolean;
   unique?: boolean;
-  missingValues?: string[];
+  missingValues?: MissingValue[];
+  // Identifier / join key: summarized like text, not as a number
+  isKey?: boolean;
 };
 
 export type AnyField = Field<FieldType>;
@@ -56,7 +65,7 @@ export type TableResource = {
   description?: string;
   fields: AnyField[];
   data: Array<Record<string, string>>;
-  missingValues?: string[];
+  missingValues?: MissingValue[];
   filterVariable?: string;
   primaryKey?: string[];
 };

@@ -202,6 +202,9 @@ const enumStringLevels = (c: cfg.EnumStringLevels) => {
 const fieldName = (measureName: string, c: cfg.Identifier) =>
   uniqueId(map((s) => [measureName, s].join("_"))(identifier(c)));
 
+const toMissingValues = (values?: string[]): m.MissingValue[] | undefined =>
+  values?.map((value) => ({ value, label: value }));
+
 const fieldBase =
   (measureName: string) => (c: cfg.FieldBase) => (state: RandState) => ({
     name: fieldName(measureName, c.field_name)(state),
@@ -210,9 +213,9 @@ const fieldBase =
     ),
     required: maybe(1 - c.undefined_props)(boolean(c.required))(state),
     unique: maybe(1 - c.undefined_props)(boolean(c.unique))(state),
-    missingValues: maybe(1 - c.undefined_props)(
-      missingValues(c.missing_values)
-    )(state),
+    missingValues: toMissingValues(
+      maybe(1 - c.undefined_props)(missingValues(c.missing_values))(state)
+    ),
   });
 
 const integerField =
@@ -404,8 +407,8 @@ const missingData =
     faker.helpers.arrayElement(miss);
 
 const fieldData =
-  (f: m.AnyField, globalMissing: string[]) => (state: RandState) => {
-    const miss = f.missingValues ?? globalMissing ?? [];
+  (f: m.AnyField, globalMissing: m.MissingValue[]) => (state: RandState) => {
+    const miss = (f.missingValues ?? globalMissing).map((mv) => mv.value);
     if (miss.length > 0 && state.faker.datatype.boolean({ probability: 0.1 })) {
       return [f.name, missingData(miss)(state)];
     } else {
@@ -419,7 +422,7 @@ const toObject = <T extends string>(xs: T[][]): Record<T, T> =>
 const tableData = (
   fields: m.AnyField[],
   nRows: cfg.IntRange,
-  globalMissing: string[]
+  globalMissing: m.MissingValue[]
 ) => {
   const rowGen = map(toObject)(
     seq(fields.map((f) => fieldData(f, globalMissing)))
@@ -445,9 +448,9 @@ const tableResource =
   (c: cfg.TableResource) =>
   (state: RandState): m.TableResource => {
     const fields = fieldList(c.fields)(state);
-    const globalMissing = maybe(1 - c.undefined_props)(
-      missingValues(c.missing_values)
-    )(state);
+    const globalMissing = toMissingValues(
+      maybe(1 - c.undefined_props)(missingValues(c.missing_values))(state)
+    );
     const data = tableData(fields, [100, 200], globalMissing ?? [])(state);
     const fv = maybe(1 - c.undefined_props)(filterVariable(fields))(state);
     return {

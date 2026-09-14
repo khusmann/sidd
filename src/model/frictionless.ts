@@ -11,6 +11,15 @@ const baseConstraints = z.object({
   enum: z.array(z.union([z.string(), z.number()])).optional(),
 });
 
+// Table Schema missingValues: plain strings, or objects with a required
+// `value` and optional `label` (https://datapackage.org/standard/table-schema/#missingValues)
+const missingValues = z.array(
+  z.union([
+    z.string(),
+    z.object({ value: z.string(), label: z.string().optional() }),
+  ])
+);
+
 const baseField = z.object({
   name: z.string(),
   title: z.string().optional(),
@@ -18,7 +27,8 @@ const baseField = z.object({
   example: z.string().optional(),
   type: z.string().optional(),
   format: z.string().optional(),
-  missingValues: z.array(z.string()).optional(),
+  missingValues: missingValues.optional(),
+  isKey: z.boolean().optional(),
 });
 
 const integerField = baseField.extend({
@@ -91,7 +101,7 @@ const field = z.discriminatedUnion("type", [
 
 const schema = z.object({
   fields: z.array(field),
-  missingValues: z.array(z.string()).optional(),
+  missingValues: missingValues.optional(),
   primaryKey: z.array(z.string()).optional(),
 });
 
@@ -133,6 +143,13 @@ const dataPackage = z.object({
   resources: z.array(resource),
 });
 
+const fromMissingValues = (mv?: MissingValues): m.MissingValue[] | undefined =>
+  mv?.map((v) =>
+    typeof v === "string"
+      ? { value: v, label: v }
+      : { value: v.value, label: v.label ?? v.value }
+  );
+
 const fromBooleanField = (f: BooleanField): m.Field<m.EnumStringFieldType> => ({
   name: f.name,
   description: f.description,
@@ -140,7 +157,8 @@ const fromBooleanField = (f: BooleanField): m.Field<m.EnumStringFieldType> => ({
     type: "enum_string",
     levels: ["false", "true"],
   },
-  missingValues: f.missingValues,
+  missingValues: fromMissingValues(f.missingValues),
+  isKey: f.isKey,
 });
 
 const fromIntegerField = (
@@ -162,7 +180,8 @@ const fromIntegerField = (
         ),
         ordered: f.categoriesOrdered,
       },
-      missingValues: f.missingValues,
+      missingValues: fromMissingValues(f.missingValues),
+      isKey: f.isKey,
     }))
     .otherwise((f) => ({
       name: f.name,
@@ -170,7 +189,8 @@ const fromIntegerField = (
       fieldType: {
         type: "integer" as const,
       },
-      missingValues: f.missingValues,
+      missingValues: fromMissingValues(f.missingValues),
+      isKey: f.isKey,
     }));
 
 const fromStringField = (f: StringField): m.Field<m.StringFieldType> => ({
@@ -179,7 +199,8 @@ const fromStringField = (f: StringField): m.Field<m.StringFieldType> => ({
   fieldType: {
     type: "string",
   },
-  missingValues: f.missingValues,
+  missingValues: fromMissingValues(f.missingValues),
+  isKey: f.isKey,
 });
 
 const fromNumberField = (f: NumberField): m.Field<m.NumberFieldType> => ({
@@ -188,7 +209,8 @@ const fromNumberField = (f: NumberField): m.Field<m.NumberFieldType> => ({
   fieldType: {
     type: "number",
   },
-  missingValues: f.missingValues,
+  missingValues: fromMissingValues(f.missingValues),
+  isKey: f.isKey,
 });
 
 const fromField = (f: Field): m.Field<m.FieldType> =>
@@ -204,7 +226,7 @@ const fromTableResourceInline = (r: InlineResource): m.TableResource => ({
   description: r.description,
   data: r.data,
   fields: r.schema.fields.map(fromField),
-  missingValues: r.schema.missingValues,
+  missingValues: fromMissingValues(r.schema.missingValues),
   primaryKey: r.schema.primaryKey,
   filterVariable: r.filterVariable,
 });
@@ -219,7 +241,7 @@ const fromTableResourceCsv =
       skip_empty_lines: true,
     }),
     fields: r.schema.fields.map(fromField),
-    missingValues: r.schema.missingValues,
+    missingValues: fromMissingValues(r.schema.missingValues),
     primaryKey: r.schema.primaryKey,
     filterVariable: r.filterVariable,
   });
@@ -244,6 +266,7 @@ export type NumberField = z.infer<typeof numberField>;
 export type StringField = z.infer<typeof stringField>;
 export type BooleanField = z.infer<typeof booleanField>;
 export type Field = z.infer<typeof field>;
+export type MissingValues = z.infer<typeof missingValues>;
 export type Schema = z.infer<typeof schema>;
 export type Resource = z.infer<typeof resource>;
 export type CsvResource = z.infer<typeof csvResource>;

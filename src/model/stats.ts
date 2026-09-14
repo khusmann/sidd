@@ -22,6 +22,10 @@ export type TextVariableStats = {
   stype: "text";
 };
 
+export type KeyVariableStats = {
+  stype: "key";
+};
+
 export type CategoricalVariableItemStats = {
   label: string;
   value: number;
@@ -64,6 +68,7 @@ export type ContinuousVariableStats = {
 
 export type VariableStats =
   | TextVariableStats
+  | KeyVariableStats
   | CategoricalVariableStats
   | CategoricalStringVariableStats
   | ContinuousVariableStats;
@@ -99,10 +104,13 @@ const maskMatching = (col: dfd.Series, values: string[]) =>
 const removeMatching = (col: dfd.Series, values: string[]) =>
   col.iloc(maskMatching(col, values).map((i) => !i));
 
+const missingMarkers = (missingValues: m.MissingValue[]) =>
+  missingValues.map((mv) => mv.value);
+
 const stringStats = (
   v: m.Field<m.StringFieldType>,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: m.MissingValue[]
 ): TextVariableStats => ({
   stype: "text",
 });
@@ -110,11 +118,11 @@ const stringStats = (
 const enumStringStats = (
   v: m.Field<m.EnumStringFieldType>,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: m.MissingValue[]
 ): CategoricalStringVariableStats => {
   const validValues = removeMatching(
     data.column(v.name),
-    v.missingValues ?? globalMissingValues
+    missingMarkers(v.missingValues ?? globalMissingValues)
   );
 
   const n = validValues.shape[0];
@@ -139,11 +147,11 @@ const enumStringStats = (
 const enumIntegerStats = (
   v: m.Field<m.EnumIntegerFieldType>,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: m.MissingValue[]
 ): CategoricalVariableStats => {
   const validValues = removeMatching(
     data.column(v.name),
-    v.missingValues ?? globalMissingValues
+    missingMarkers(v.missingValues ?? globalMissingValues)
   );
 
   const n = validValues.shape[0];
@@ -172,11 +180,11 @@ const enumIntegerStats = (
 const integerStats = (
   v: m.Field<m.IntegerFieldType>,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: m.MissingValue[]
 ): ContinuousVariableStats => {
   const validValues = removeMatching(
     data.column(v.name),
-    v.missingValues ?? globalMissingValues
+    missingMarkers(v.missingValues ?? globalMissingValues)
   ).asType("float32");
 
   if (validValues.shape[0] === 0) {
@@ -231,11 +239,11 @@ const integerStats = (
 const numberStats = (
   v: m.Field<m.NumberFieldType>,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: m.MissingValue[]
 ): ContinuousVariableStats => {
   const validValues = removeMatching(
     data.column(v.name),
-    v.missingValues ?? globalMissingValues
+    missingMarkers(v.missingValues ?? globalMissingValues)
   ).asType("float32");
 
   if (validValues.shape[0] === 0) {
@@ -290,7 +298,7 @@ const numberStats = (
 const variableTypeStats = (
   v: m.AnyField,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: m.MissingValue[]
 ): VariableStats =>
   match(v)
     .with({ fieldType: { type: "string" } }, (v) =>
@@ -338,38 +346,33 @@ const variableTypeName = (v: m.AnyField): string =>
 const missingnessStats = (
   v: m.AnyField,
   data: dfd.DataFrame,
-  globalMissingValues: string[]
+  globalMissingValues: m.MissingValue[]
 ): MissingnessStats[] => {
   const missingValues = v.missingValues ?? globalMissingValues;
-  const values = data.column(v.name).loc(
-    data
-      .column(v.name)
-      .asType("string")
-      .str.search(missingValues.map((s) => `^${s}$`).join("|"))
-      .ne(-1) as unknown as boolean[]
+  const values = data.column(v.name).values;
+
+  const counts = missingValues.map(
+    (mv) => values.filter((x) => typeof x === "string" && x === mv.value).length
   );
 
-  const n = values.shape[0];
+  const n = counts.reduce((a, b) => a + b, 0);
 
-  return missingValues.map((l) => {
-    const count = values.asType("string").str.search(`^${l}$`).ne(-1).sum();
-    return {
-      label: l,
-      count,
-      pct: count / n,
-    };
-  });
+  return missingValues.map((mv, idx) => ({
+    label: mv.label,
+    count: counts[idx],
+    pct: counts[idx] / n,
+  }));
 };
 
 const variableStats = (
   v: m.AnyField,
   data: dfd.DataFrame,
-  globalMissingValues: string[],
+  globalMissingValues: m.MissingValue[],
   primaryKey: string[]
 ): Variable<VariableStats> => {
   const name = v.name;
   const groups = name.split("_");
-  const missingValues = v.missingValues ?? globalMissingValues;
+  const missingValues = missingMarkers(v.missingValues ?? globalMissingValues);
 
   const nMissing = maskMatching(data.column(name), missingValues).reduce(
     (a, b) => a + Number(b),
@@ -380,6 +383,12 @@ const variableStats = (
 
   const currGroup = primaryKey.includes(v.name) ? "Primary Key" : groups[0];
 
+  // Keys are identifiers: a mean or histogram of IDs is meaningless, so skip
+  // numeric summaries. Coded keys (e.g. waves) keep their per-level counts.
+  const isNumericKey =
+    (v.isKey === true || primaryKey.includes(v.name)) &&
+    (v.fieldType.type === "integer" || v.fieldType.type === "number");
+
   return {
     id: idCounter++,
     name,
@@ -388,14 +397,16 @@ const variableStats = (
     num_valid: nValid,
     num_missing: nMissing,
     group: currGroup,
-    stats: variableTypeStats(v, data, globalMissingValues),
+    stats: isNumericKey
+      ? { stype: "key" }
+      : variableTypeStats(v, data, globalMissingValues),
     missingness: missingnessStats(v, data, globalMissingValues),
   };
 };
 
 const getFilterLevels = (
   fields: m.AnyField[],
-  globalMissingValues: string[],
+  globalMissingValues: m.MissingValue[],
   filterVariable?: string
 ) => {
   if (filterVariable === undefined) {
@@ -408,7 +419,9 @@ const getFilterLevels = (
     return [];
   }
 
-  const missingValues = filterField.missingValues ?? globalMissingValues;
+  const missingValues = missingMarkers(
+    filterField.missingValues ?? globalMissingValues
+  );
 
   if (filterField.fieldType.type === "enum_string") {
     const realValues = filterField.fieldType.levels.filter(

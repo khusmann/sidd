@@ -352,6 +352,10 @@ const variableViewer = (currVar: any) => {
     return placeholderViewer(`Text variable ${currVar.name}`);
   }
 
+  if (stype === "key") {
+    return placeholderViewer(`Key variable ${currVar.name}`);
+  }
+
   return placeholderViewer(`Unknown variable type ${stype}`);
 };
 
