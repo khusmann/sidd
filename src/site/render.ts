@@ -20,6 +20,13 @@ type ViewerDimensions = {
   marginLeft: number;
 };
 
+// Like coded levels: "LABEL (value)", or just the label when it is the same
+// as the value (plain string missingValues)
+const missingnessLabel = (d: any) =>
+  d.value === undefined || d.label === d.value
+    ? `${d.label}`
+    : `${d.label} (${d.value})`;
+
 const missingnessViewer = (currVar: Variable<VariableStats>) => {
   const { width, height, marginTop, marginBottom } = getDimensions();
 
@@ -38,7 +45,7 @@ const missingnessViewer = (currVar: Variable<VariableStats>) => {
   const y = d3
     .scaleBand()
     .range([marginTop, height - marginBottom])
-    .domain(missingness.map((d: any) => `${d.label}`))
+    .domain(missingness.map(missingnessLabel))
     .padding(0.1);
 
   svg
@@ -66,14 +73,17 @@ const missingnessViewer = (currVar: Variable<VariableStats>) => {
   bars
     .append("rect")
     .attr("x", x(0))
-    .attr("y", (d: any) => y(`${d.label}`) ?? 0)
+    .attr("y", (d: any) => y(missingnessLabel(d)) ?? 0)
     .attr("width", (d: any) => x(d.count))
     .attr("height", y.bandwidth());
 
   bars
     .append("text")
     .text((d: any) => `${d.count} (${d3.format("0.2f")(d.pct * 100)}%)` ?? 0)
-    .attr("y", (d: any) => (y(`${d.label}`) ?? 0) + y.bandwidth() / 2 + 5)
+    .attr(
+      "y",
+      (d: any) => (y(missingnessLabel(d)) ?? 0) + y.bandwidth() / 2 + 5
+    )
     .attr("x", (d: any) => x(d.count) + 5)
     .style("text-anchor", "left")
     .style("font-size", "10px");

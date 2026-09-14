@@ -75,6 +75,7 @@ export type VariableStats =
 
 export type MissingnessStats = {
   label: string;
+  value?: string;
   count: number;
   pct: number;
 };
@@ -359,6 +360,7 @@ const missingnessStats = (
 
   return missingValues.map((mv, idx) => ({
     label: mv.label,
+    value: mv.value,
     count: counts[idx],
     pct: counts[idx] / n,
   }));
