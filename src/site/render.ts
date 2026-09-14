@@ -27,6 +27,17 @@ const missingnessLabel = (d: any) =>
     ? `${d.label}`
     : `${d.label} (${d.value})`;
 
+// Widest rendered width of the given labels, in px, at the axis tick font
+// (d3 axes default to 10px sans-serif)
+const maxLabelWidth = (labels: string[], font = "10px sans-serif") => {
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (ctx === null) {
+    return 0;
+  }
+  ctx.font = font;
+  return Math.max(0, ...labels.map((l) => ctx.measureText(l).width));
+};
+
 const missingnessViewer = (currVar: Variable<VariableStats>) => {
   const { width, height, marginTop, marginBottom } = getDimensions();
 
@@ -37,10 +48,21 @@ const missingnessViewer = (currVar: Variable<VariableStats>) => {
     d3.max(missingness, (d: any) => d.count as number) ??
     Number.MAX_SAFE_INTEGER;
 
+  // Put the axis far enough right that the longest label fits (tick size +
+  // padding), but keep room for bars and their count text.
+  const countTextWidth = 90;
+  const axisX = Math.min(
+    Math.max(width / 3, maxLabelWidth(missingness.map(missingnessLabel)) + 15),
+    width * 0.6
+  );
+
   const x = d3
     .scaleLinear()
     .domain([0, maxCount])
-    .range([0, width / 3]);
+    .range([
+      0,
+      Math.max(0, Math.min(width / 3, width - axisX - countTextWidth)),
+    ]);
 
   const y = d3
     .scaleBand()
@@ -50,7 +72,7 @@ const missingnessViewer = (currVar: Variable<VariableStats>) => {
 
   svg
     .append("g")
-    .attr("transform", `translate(${width / 3},0)`)
+    .attr("transform", `translate(${axisX},0)`)
     .call(d3.axisLeft(y));
 
   svg
@@ -68,7 +90,7 @@ const missingnessViewer = (currVar: Variable<VariableStats>) => {
     .enter()
     .append("g")
     .attr("class", "bar")
-    .attr("transform", `translate(${width / 3 + 5},0)`);
+    .attr("transform", `translate(${axisX + 5},0)`);
 
   bars
     .append("rect")
